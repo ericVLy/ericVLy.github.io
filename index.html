@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心流成瘾指数 · 动态视口</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>十二颗心实现实操的前端/UI交互</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,14 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, sans-serif;
             background: #f0f4f8;
             color: #1e293b;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 16px;
         }
 
         .container {
@@ -28,7 +28,7 @@
             background: #ffffff;
             border-radius: 32px;
             box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
-            padding: 32px 36px 40px;
+            padding: 24px 28px 32px;
         }
 
         header {
@@ -36,20 +36,20 @@
             flex-wrap: wrap;
             align-items: baseline;
             justify-content: space-between;
-            margin-bottom: 24px;
-            gap: 12px 20px;
+            margin-bottom: 20px;
+            gap: 8px 16px;
         }
 
         .title-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .title-group h1 {
-            font-size: 26px;
+            font-size: clamp(20px, 4vw, 28px);
             font-weight: 700;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -57,39 +57,32 @@
         }
 
         .title-group .emoji-badge {
-            font-size: 28px;
+            font-size: clamp(24px, 4vw, 32px);
             line-height: 1;
         }
 
         .formula-box {
             background: #f1f5f9;
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 40px;
-            font-size: 18px;
+            font-size: clamp(14px, 2.2vw, 20px);
             font-weight: 500;
             color: #0f172a;
-            letter-spacing: 0.2px;
             border: 1px solid #e2e8f0;
             font-family: 'Times New Roman', 'CMU Serif', serif;
             white-space: nowrap;
+            letter-spacing: 0.2px;
         }
-
-        .formula-box sub {
-            font-size: 0.7em;
-        }
-
-        .formula-box .highlight {
-            color: #2563eb;
-            font-weight: 700;
-        }
+        .formula-box sub { font-size: 0.7em; }
+        .formula-box .highlight { color: #2563eb; font-weight: 700; }
 
         .chart-wrapper {
             position: relative;
             background: #fafcff;
             border-radius: 20px;
             border: 1px solid #e9edf4;
-            padding: 8px;
-            margin-bottom: 28px;
+            padding: 6px;
+            margin-bottom: 24px;
             box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
         }
 
@@ -109,35 +102,27 @@
             background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(6px);
             color: #f1f5f9;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: clamp(12px, 2vw, 15px);
             font-weight: 500;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
             display: none;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            line-height: 1.5;
+            line-height: 1.6;
             z-index: 10;
         }
-        #tooltip .tip-label {
-            opacity: 0.7;
-            font-weight: 400;
-        }
-        #tooltip .tip-value {
-            font-weight: 600;
-            color: #60a5fa;
-        }
+        #tooltip .tip-label { opacity: 0.7; font-weight: 400; }
+        #tooltip .tip-value { font-weight: 600; color: #60a5fa; }
 
-        .controls-section {
-            margin-bottom: 22px;
-        }
+        .controls-section { margin-bottom: 20px; }
 
         .controls-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 18px 20px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 14px 16px;
             background: #f8fafc;
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-radius: 20px;
             border: 1px solid #eef2f6;
         }
@@ -145,22 +130,21 @@
         .param-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .param-group .param-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
+            font-size: clamp(13px, 1.6vw, 15px);
             font-weight: 600;
             color: #334155;
         }
-
         .param-group .param-header .param-name {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
         .param-group .param-header .param-name .sym {
             font-family: 'Times New Roman', serif;
@@ -168,19 +152,16 @@
             font-size: 1.1em;
             color: #2563eb;
         }
-        .param-group .param-header .param-name .sym.c-sym {
-            color: #dc2626;
-        }
+        .param-group .param-header .param-name .sym.c-sym { color: #dc2626; }
         .param-group .param-header .param-value {
             background: #e9edf4;
-            padding: 0 10px;
+            padding: 0 8px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: clamp(12px, 1.4vw, 14px);
             font-weight: 700;
             color: #0f172a;
-            min-width: 38px;
+            min-width: 34px;
             text-align: center;
-            font-variant-numeric: tabular-nums;
         }
 
         .param-group input[type="range"] {
@@ -191,7 +172,7 @@
             border-radius: 4px;
             background: #dce1ea;
             outline: none;
-            margin: 4px 0 2px;
+            margin: 2px 0;
         }
         .param-group input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -228,7 +209,7 @@
         }
 
         .param-group .param-hint {
-            font-size: 11px;
+            font-size: clamp(10px, 1.2vw, 12px);
             color: #94a3b8;
             margin-top: 1px;
         }
@@ -238,8 +219,8 @@
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 16px 24px;
-            padding: 16px 0 4px;
+            gap: 12px 20px;
+            padding: 14px 0 4px;
             border-top: 1px solid #eef2f6;
             margin-top: 4px;
         }
@@ -247,15 +228,14 @@
         .peak-info {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
         }
-
         .peak-info .peak-item {
             display: flex;
             align-items: baseline;
-            gap: 6px;
-            font-size: 15px;
+            gap: 4px;
+            font-size: clamp(13px, 1.6vw, 16px);
             font-weight: 500;
             color: #1e293b;
         }
@@ -267,27 +247,22 @@
             font-weight: 700;
             color: #2563eb;
             font-variant-numeric: tabular-nums;
-            font-size: 1.1em;
+            font-size: 1.05em;
         }
-        .peak-info .peak-item .number.gold {
-            color: #b45309;
-        }
-        .peak-info .peak-item .number.current {
-            color: #dc2626;
-        }
+        .peak-info .peak-item .number.gold { color: #b45309; }
+        .peak-info .peak-item .number.current { color: #dc2626; }
 
         .preset-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
-
         .preset-buttons button {
-            padding: 6px 18px;
+            padding: 5px 14px;
             border-radius: 40px;
             border: 1px solid #dce1ea;
             background: #ffffff;
-            font-size: 13px;
+            font-size: clamp(12px, 1.3vw, 14px);
             font-weight: 500;
             color: #334155;
             cursor: pointer;
@@ -298,42 +273,37 @@
             background: #f1f5f9;
             border-color: #b9c4d4;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        .preset-buttons button:active {
-            transform: translateY(0px);
-        }
-        .preset-buttons button .emoji {
-            margin-right: 5px;
-        }
+        .preset-buttons button:active { transform: translateY(0px); }
+        .preset-buttons button .emoji { margin-right: 4px; }
 
         .legend-note {
-            font-size: 12px;
+            font-size: clamp(11px, 1.2vw, 13px);
             color: #94a3b8;
             text-align: center;
-            margin-top: 14px;
+            margin-top: 12px;
             padding-top: 10px;
             border-top: 1px dashed #e9edf4;
         }
-        .legend-note strong {
-            color: #64748b;
-            font-weight: 600;
-        }
+        .legend-note strong { color: #64748b; font-weight: 600; }
 
+        /* 移动端优化 */
         @media (max-width: 700px) {
-            .container { padding: 20px 16px 28px; }
-            header { flex-direction: column; align-items: stretch; gap: 10px; }
-            .title-group h1 { font-size: 21px; }
-            .formula-box { font-size: 15px; white-space: normal; text-align: center; padding: 6px 14px; }
-            .controls-grid { grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 16px; }
-            .footer-bar { flex-direction: column; align-items: stretch; gap: 14px; }
-            .peak-info { justify-content: center; }
+            .container { padding: 16px 14px 24px; border-radius: 24px; }
+            header { flex-direction: column; align-items: stretch; gap: 6px; }
+            .title-group h1 { font-size: 22px; }
+            .formula-box { font-size: 15px; white-space: normal; text-align: center; padding: 4px 12px; }
+            .controls-grid { grid-template-columns: 1fr 1fr; gap: 10px 12px; padding: 12px; }
+            .footer-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+            .peak-info { justify-content: center; gap: 12px; }
             .preset-buttons { justify-content: center; }
+            .param-group .param-header { font-size: 14px; }
+            .param-group .param-hint { font-size: 11px; }
         }
         @media (max-width: 460px) {
             .controls-grid { grid-template-columns: 1fr; }
-            .container { padding: 14px 12px 20px; }
-            .title-group h1 { font-size: 18px; }
+            .container { padding: 12px 10px 18px; }
+            .title-group h1 { font-size: 19px; }
             .formula-box { font-size: 13px; }
         }
     </style>
@@ -344,7 +314,7 @@
     <header>
         <div class="title-group">
             <span class="emoji-badge">⚡</span>
-            <h1>心流成瘾指数 · 动态视口</h1>
+            <h1>十二颗心实现实操的前端/UI交互</h1>
         </div>
         <div class="formula-box">
             A<sub>flow</sub> =
@@ -499,7 +469,7 @@
         const PAD = { top: 36, bottom: 46, left: 56, right: 32 };
         const N_POINTS = 300;
         const Y_MAX_FIXED = 200;
-        const VIEWPORT_HALF = 6; // 以 C 为中心，左右各 6 个单位
+        const VIEWPORT_HALF = 6;
 
         function draw() {
             // 读取参数
@@ -522,27 +492,43 @@
             const currentA = computeAflow(C, H, G, Fb, sigma, S);
             currentAEl.textContent = currentA.toFixed(currentA > 10 ? 1 : 2);
 
-            // ===== 动态 X 范围 (以 C 为中心) =====
+            // ===== 动态字体大小 (根据画布显示宽度) =====
+            const rect = canvas.getBoundingClientRect();
+            const displayWidth = rect.width;
+            // 基准比例：以 1000px 宽度为 1.0，最小 0.55，最大 1.2
+            let scale = Math.min(1.2, Math.max(0.55, displayWidth / 1000));
+            // 但为了移动端更清晰，稍微提高基数
+            scale = scale * 1.1; 
+            const fontSize = {
+                tick: Math.round(12 * scale),
+                axis: Math.round(14 * scale),
+                peak: Math.round(14 * scale),
+                current: Math.round(13 * scale),
+                small: Math.round(11 * scale),
+            };
+            // 保证最小可读
+            const minSize = 10;
+            fontSize.tick = Math.max(minSize, fontSize.tick);
+            fontSize.axis = Math.max(minSize, fontSize.axis);
+            fontSize.peak = Math.max(minSize, fontSize.peak);
+            fontSize.current = Math.max(minSize, fontSize.current);
+            fontSize.small = Math.max(minSize, fontSize.small);
+
+            // ===== 动态 X 范围 =====
             let xMin = C - VIEWPORT_HALF;
             let xMax = C + VIEWPORT_HALF;
-            // 边界限制到 [0, 20]
             if (xMin < 0) { xMin = 0; xMax = Math.min(20, VIEWPORT_HALF * 2); }
             if (xMax > 20) { xMax = 20; xMin = Math.max(0, 20 - VIEWPORT_HALF * 2); }
-            // 若视口宽度小于预设，则调整
             if (xMax - xMin < 0.5) {
                 xMin = Math.max(0, C - 0.25);
                 xMax = Math.min(20, C + 0.25);
             }
 
-            // ===== 计算曲线数据 (在视口范围内) =====
-            const data = [];
+            // ===== 全局数据 (用于峰值) =====
+            const globalData = [];
             let maxVal = 0;
             let peakC = S;
             let peakVal = H * G * Fb;
-
-            // 先全局扫描以找到峰值 (但峰值可能不在视口内，标记仍显示)
-            // 我们用更精确的方法：在 [0,20] 上扫描
-            const globalData = [];
             for (let i = 0; i <= N_POINTS; i++) {
                 const c = 0 + (20 - 0) * i / N_POINTS;
                 const val = computeAflow(c, H, G, Fb, sigma, S);
@@ -551,10 +537,9 @@
             }
             if (H * G * Fb === 0) { peakVal = 0; peakC = S; }
 
-            // 裁剪在视口内的数据用于绘制
+            // 视口内数据
             const visibleData = globalData.filter(d => d.C >= xMin && d.C <= xMax);
             if (visibleData.length === 0) {
-                // 如果没有数据点，强行补充当前 C 点
                 visibleData.push({ C: C, val: computeAflow(C, H, G, Fb, sigma, S) });
             }
 
@@ -582,13 +567,12 @@
             ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, W, H_canvas);
 
-            // ===== 网格 (动态刻度) =====
+            // ===== 网格 =====
             ctx.save();
             ctx.strokeStyle = '#e6ecf5';
             ctx.lineWidth = 0.8;
             ctx.setLineDash([4, 6]);
 
-            // X 轴刻度：根据视口范围智能生成 (步长 1 或 2)
             let xStep = 1;
             const range = xMax - xMin;
             if (range > 8) xStep = 2;
@@ -605,7 +589,6 @@
                 ctx.stroke();
             }
 
-            // Y 轴网格 (固定)
             const ySteps = 5;
             for (let i = 0; i <= ySteps; i++) {
                 const v = yMin + (yMax - yMin) * i / ySteps;
@@ -631,16 +614,17 @@
             ctx.stroke();
             ctx.restore();
 
-            // ===== 刻度标签 =====
+            // ===== 刻度标签 (动态字号) =====
             ctx.save();
             ctx.fillStyle = '#475569';
-            ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+            ctx.font = `${fontSize.tick}px "Segoe UI", system-ui, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             for (let c = startTick; c <= xMax; c += xStep) {
                 if (c < xMin || c > xMax) continue;
                 const x = toCanvasX(c);
-                ctx.fillText(c.toFixed(xStep < 1 ? 1 : 0), x, H_canvas - PAD.bottom + 8);
+                const label = xStep < 1 ? c.toFixed(1) : c.toFixed(0);
+                ctx.fillText(label, x, H_canvas - PAD.bottom + 6);
             }
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
@@ -648,16 +632,16 @@
                 const v = yMin + (yMax - yMin) * i / ySteps;
                 const y = toCanvasY(v);
                 const label = v < 0.01 ? '0' : v.toFixed(v > 10 ? 0 : 1);
-                ctx.fillText(label, PAD.left - 10, y);
+                ctx.fillText(label, PAD.left - 8, y);
             }
             // 轴标签
             ctx.fillStyle = '#1e293b';
-            ctx.font = '14px "Segoe UI", system-ui, sans-serif';
+            ctx.font = `${fontSize.axis}px "Segoe UI", system-ui, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText('挑战 C', W / 2, H_canvas - 6);
+            ctx.fillText('挑战 C', W / 2, H_canvas - 4);
             ctx.save();
-            ctx.translate(20, H_canvas / 2);
+            ctx.translate(18, H_canvas / 2);
             ctx.rotate(-Math.PI / 2);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -665,7 +649,7 @@
             ctx.restore();
             ctx.restore();
 
-            // ===== 绘制曲线 (只绘制视口内部分) =====
+            // ===== 曲线 =====
             if (visibleData.length > 1) {
                 ctx.save();
                 const grad = ctx.createLinearGradient(0, PAD.top, 0, H_canvas - PAD.bottom);
@@ -676,9 +660,7 @@
                 ctx.beginPath();
                 ctx.moveTo(toCanvasX(visibleData[0].C), toCanvasY(0));
                 for (let i = 0; i < visibleData.length; i++) {
-                    const x = toCanvasX(visibleData[i].C);
-                    const y = toCanvasY(visibleData[i].val);
-                    ctx.lineTo(x, y);
+                    ctx.lineTo(toCanvasX(visibleData[i].C), toCanvasY(visibleData[i].val));
                 }
                 ctx.lineTo(toCanvasX(visibleData[visibleData.length - 1].C), toCanvasY(0));
                 ctx.closePath();
@@ -722,8 +704,8 @@
             if (peakVal > 0 || H * G * Fb === 0) {
                 const px = toCanvasX(peakC);
                 const py = toCanvasY(peakVal);
-                // 垂直虚线 (如果峰值在视口内)
-                if (peakC >= xMin && peakC <= xMax) {
+                const inView = (peakC >= xMin && peakC <= xMax);
+                if (inView) {
                     ctx.save();
                     ctx.setLineDash([5, 5]);
                     ctx.strokeStyle = 'rgba(37, 99, 235, 0.35)';
@@ -753,21 +735,21 @@
 
                     ctx.save();
                     ctx.fillStyle = '#0f172a';
-                    ctx.font = '600 14px "Segoe UI", system-ui, sans-serif';
+                    ctx.font = `${fontSize.peak}px "Segoe UI", system-ui, sans-serif`;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
                     const label = '峰值 ' + peakVal.toFixed(peakVal > 10 ? 1 : 2);
                     const tw = ctx.measureText(label).width;
-                    const tx = px + 16;
-                    const ty = py - 12;
+                    const tx = px + 14;
+                    const ty = py - 10;
                     ctx.fillStyle = 'rgba(255,255,255,0.85)';
                     ctx.shadowColor = 'rgba(0,0,0,0.06)';
                     ctx.shadowBlur = 8;
                     if (ctx.roundRect) {
-                        ctx.roundRect(tx - 6, ty - 18, tw + 16, 28, 8);
+                        ctx.roundRect(tx - 4, ty - 16, tw + 12, 26, 6);
                         ctx.fill();
                     } else {
-                        ctx.fillRect(tx - 6, ty - 18, tw + 16, 28);
+                        ctx.fillRect(tx - 4, ty - 16, tw + 12, 26);
                     }
                     ctx.shadowBlur = 0;
                     ctx.fillStyle = '#0f172a';
@@ -775,15 +757,14 @@
                     ctx.fillText(label, tx, ty + 2);
                     ctx.restore();
                 } else {
-                    // 峰值在视口外，在边缘显示指示箭头
-                    // 简单起见，仅显示文字提示在边缘
+                    // 峰值在视口外，边缘提示
                     ctx.save();
                     ctx.fillStyle = '#f97316';
-                    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                    ctx.font = `${fontSize.small}px "Segoe UI", system-ui, sans-serif`;
                     ctx.textAlign = peakC < xMin ? 'left' : 'right';
                     ctx.textBaseline = 'bottom';
-                    const edgeX = peakC < xMin ? PAD.left + 2 : W - PAD.right - 2;
-                    ctx.fillText('◀ 峰值 C=' + peakC.toFixed(1), edgeX, PAD.top + 20);
+                    const edgeX = peakC < xMin ? PAD.left + 4 : W - PAD.right - 4;
+                    ctx.fillText('◀ 峰值 C=' + peakC.toFixed(1), edgeX, PAD.top + 18);
                     ctx.restore();
                 }
                 peakValueEl.textContent = peakVal.toFixed(peakVal > 10 ? 1 : 2);
@@ -807,20 +788,19 @@
                 ctx.restore();
                 ctx.save();
                 ctx.fillStyle = '#6366f1';
-                ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                ctx.font = `${fontSize.small}px "Segoe UI", system-ui, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                ctx.fillText('S = ' + S.toFixed(1), sx, PAD.top - 24);
+                ctx.fillText('S = ' + S.toFixed(1), sx, PAD.top - 22);
                 ctx.restore();
             } else {
-                // 在边缘显示提示
                 ctx.save();
                 ctx.fillStyle = '#6366f1';
-                ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                ctx.font = `${fontSize.small}px "Segoe UI", system-ui, sans-serif`;
                 ctx.textAlign = S < xMin ? 'left' : 'right';
                 ctx.textBaseline = 'bottom';
-                const edgeX = S < xMin ? PAD.left + 2 : W - PAD.right - 2;
-                ctx.fillText('S=' + S.toFixed(1) + (S < xMin ? ' ▶' : ' ◀'), edgeX, PAD.top + 40);
+                const edgeX = S < xMin ? PAD.left + 4 : W - PAD.right - 4;
+                ctx.fillText('S=' + S.toFixed(1) + (S < xMin ? ' ▶' : ' ◀'), edgeX, PAD.top + 38);
                 ctx.restore();
             }
 
@@ -856,21 +836,21 @@
 
             ctx.save();
             ctx.fillStyle = '#0f172a';
-            ctx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+            ctx.font = `${fontSize.current}px "Segoe UI", system-ui, sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'bottom';
             const labelCur = 'C=' + C.toFixed(1) + '  A=' + currentA.toFixed(currentA > 10 ? 1 : 2);
             const twCur = ctx.measureText(labelCur).width;
-            const txCur = cx + 16;
-            const tyCur = cy - 10;
+            const txCur = cx + 14;
+            const tyCur = cy - 8;
             ctx.fillStyle = 'rgba(255,255,255,0.9)';
             ctx.shadowColor = 'rgba(0,0,0,0.06)';
             ctx.shadowBlur = 8;
             if (ctx.roundRect) {
-                ctx.roundRect(txCur - 6, tyCur - 16, twCur + 16, 26, 8);
+                ctx.roundRect(txCur - 4, tyCur - 15, twCur + 12, 24, 6);
                 ctx.fill();
             } else {
-                ctx.fillRect(txCur - 6, tyCur - 16, twCur + 16, 26);
+                ctx.fillRect(txCur - 4, tyCur - 15, twCur + 12, 24);
             }
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#dc2626';
@@ -878,7 +858,7 @@
             ctx.fillText(labelCur, txCur, tyCur + 2);
             ctx.restore();
 
-            // ===== 心流匹配区 (以 S 为中心) =====
+            // ===== 心流匹配区 =====
             const bandWidth = sigma * 1.2;
             const leftBand = Math.max(xMin, S - bandWidth);
             const rightBand = Math.min(xMax, S + bandWidth);
@@ -895,11 +875,11 @@
                 ctx.restore();
                 ctx.save();
                 ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
-                ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+                ctx.font = `${fontSize.small}px "Segoe UI", system-ui, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
                 const midX = (x1 + x2) / 2;
-                ctx.fillText('✦ 心流匹配区 ✦', midX, PAD.top - 4);
+                ctx.fillText('✦ 心流匹配区 ✦', midX, PAD.top - 2);
                 ctx.restore();
             }
 
@@ -925,7 +905,6 @@
                 tooltip.style.display = 'none';
                 return;
             }
-            // 计算当前视口范围
             const C = parseFloat(sliders.C.value) || 0;
             let xMin = C - VIEWPORT_HALF;
             let xMax = C + VIEWPORT_HALF;
@@ -941,10 +920,10 @@
             const val = computeAflow(clampedC, H, G, Fb, sigma, S);
             tipC.textContent = clampedC.toFixed(1);
             tipA.textContent = val.toFixed(val > 10 ? 1 : 3);
-            const toolX = e.clientX - rect.left + 16;
-            const toolY = e.clientY - rect.top - 10;
-            tooltip.style.left = Math.min(toolX, rect.width - 180) + 'px';
-            tooltip.style.top = Math.min(Math.max(toolY, 10), rect.height - 70) + 'px';
+            const toolX = e.clientX - rect.left + 14;
+            const toolY = e.clientY - rect.top - 8;
+            tooltip.style.left = Math.min(toolX, rect.width - 160) + 'px';
+            tooltip.style.top = Math.min(Math.max(toolY, 8), rect.height - 60) + 'px';
             tooltip.style.display = 'block';
         }
 
