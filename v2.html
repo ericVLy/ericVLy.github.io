@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>十二颗心实现实操的前端/UI交互(V_2)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 24px 28px 32px;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 8px 16px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-group h1 {
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-group .emoji-badge {
+            font-size: clamp(24px, 4vw, 32px);
+            line-height: 1;
+        }
+
+        .formula-box {
+            background: #f1f5f9;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: clamp(14px, 2.2vw, 20px);
+            font-weight: 500;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            font-family: 'Times New Roman', 'CMU Serif', serif;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+        .formula-box sub {
+            font-size: 0.7em;
+        }
+        .formula-box .highlight {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            background: #fafcff;
+            border-radius: 20px;
+            border: 1px solid #e9edf4;
+            padding: 6px;
+            margin-bottom: 24px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #chartFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 14px;
+            display: block;
+            background: #ffffff;
+        }
+
+        .controls-section {
+            margin-bottom: 20px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 14px 16px;
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .param-group .param-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: clamp(13px, 1.6vw, 15px);
+            font-weight: 600;
+            color: #334155;
+        }
+        .param-group .param-header .param-name {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .param-group .param-header .param-name .sym {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 1.1em;
+            color: #2563eb;
+        }
+        .param-group .param-header .param-name .sym.c-sym {
+            color: #dc2626;
+        }
+        .param-group .param-header .param-value {
+            background: #e9edf4;
+            padding: 0 8px;
+            border-radius: 20px;
+            font-size: clamp(12px, 1.4vw, 14px);
+            font-weight: 700;
+            color: #0f172a;
+            min-width: 34px;
+            text-align: center;
+        }
+
+        .param-group input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 4px;
+            background: #dce1ea;
+            outline: none;
+            margin: 2px 0;
+        }
+        .param-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 2px solid #ffffff;
+        }
+        .param-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+        }
+        .param-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+        }
+        #sliderC::-webkit-slider-thumb {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
+        }
+        #sliderC::-moz-range-thumb {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
+        }
+
+        .param-group .param-hint {
+            font-size: clamp(10px, 1.2vw, 12px);
+            color: #94a3b8;
+            margin-top: 1px;
+        }
+
+        .auto-demo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        #autoDemoBtn {
+            padding: 10px 28px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #ffffff;
+            font-size: clamp(15px, 1.6vw, 18px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            letter-spacing: 0.5px;
+            min-width: 140px;
+        }
+        #autoDemoBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+        }
+        #autoDemoBtn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+        #autoDemoBtn.running {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+        #autoDemoBtn.running:hover:not(:disabled) {
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.45);
+        }
+        #autoDemoBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        #resetDemoBtn {
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: 1px solid #dce1ea;
+            background: #ffffff;
+            color: #334155;
+            font-size: clamp(14px, 1.4vw, 16px);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        #resetDemoBtn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #b9c4d4;
+            transform: translateY(-1px);
+        }
+        #resetDemoBtn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+        #resetDemoBtn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .params-config-container {
+            margin-top: 14px;
+            padding: 0 8px;
+        }
+        .params-config-container summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #2563eb;
+            font-size: clamp(14px, 1.5vw, 16px);
+            user-select: none;
+            padding: 4px 0;
+            display: inline-block;
+        }
+        .params-config-container summary:hover {
+            color: #1d4ed8;
+        }
+        .params-config-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(12px, 1.2vw, 14px);
+            margin-top: 6px;
+        }
+        .params-config-container th,
+        .params-config-container td {
+            padding: 6px 4px;
+            text-align: center;
+            border-bottom: 1px solid #e9edf4;
+        }
+        .params-config-container th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+        }
+        .params-config-container td:first-child {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .params-config-container input[type="number"] {
+            width: 100%;
+            max-width: 80px;
+            padding: 4px 6px;
+            border: 1px solid #dce1ea;
+            border-radius: 6px;
+            font-size: inherit;
+            text-align: center;
+            background: #ffffff;
+            transition: border-color 0.2s;
+        }
+        .params-config-container input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+        .params-config-container input[type="number"]:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+        .params-config-container td {
+            min-width: 60px;
+        }
+
+        .footer-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 20px;
+            padding: 14px 0 4px;
+            border-top: 1px solid #eef2f6;
+            margin-top: 4px;
+        }
+
+        .peak-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .peak-info .peak-item {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            font-size: clamp(13px, 1.6vw, 16px);
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .peak-info .peak-item .label {
+            font-weight: 400;
+            color: #64748b;
+        }
+        .peak-info .peak-item .number {
+            font-weight: 700;
+            color: #2563eb;
+            font-variant-numeric: tabular-nums;
+            font-size: 1.05em;
+        }
+        .peak-info .peak-item .number.gold {
+            color: #b45309;
+        }
+        .peak-info .peak-item .number.current {
+            color: #dc2626;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .preset-buttons button {
+            padding: 5px 14px;
+            border-radius: 40px;
+            border: 1px solid #dce1ea;
+            background: #ffffff;
+            font-size: clamp(12px, 1.3vw, 14px);
+            font-weight: 500;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.18s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        .preset-buttons button:hover {
+            background: #f1f5f9;
+            border-color: #b9c4d4;
+            transform: translateY(-1px);
+        }
+        .preset-buttons button:active {
+            transform: translateY(0px);
+        }
+        .preset-buttons button .emoji {
+            margin-right: 4px;
+        }
+
+        .legend-note {
+            font-size: clamp(11px, 1.2vw, 13px);
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #e9edf4;
+        }
+        .legend-note strong {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        @media (max-width:700px) {
+            .container {
+                padding: 16px 14px 24px;
+                border-radius: 24px;
+            }
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .title-group h1 {
+                font-size: 22px;
+            }
+            .formula-box {
+                font-size: 15px;
+                white-space: normal;
+                text-align: center;
+                padding: 4px 12px;
+            }
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px 12px;
+                padding: 12px;
+            }
+            .footer-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .peak-info {
+                justify-content: center;
+                gap: 12px;
+            }
+            .preset-buttons {
+                justify-content: center;
+            }
+            .param-group .param-header {
+                font-size: 14px;
+            }
+            .param-group .param-hint {
+                font-size: 11px;
+            }
+            .params-config-container table {
+                font-size: 11px;
+            }
+            .params-config-container input[type="number"] {
+                max-width: 60px;
+                padding: 2px 4px;
+            }
+        }
+        @media (max-width:460px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 12px 10px 18px;
+            }
+            .title-group h1 {
+                font-size: 19px;
+            }
+            .formula-box {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="title-group">
+                <span class="emoji-badge">⚡</span>
+                <h1>十二颗心实现实操的前端/UI交互(V_2)</h1>
+            </div>
+            <div class="formula-box">
+                A<sub>flow</sub> =
+                <span class="highlight">H</span> ·
+                <span class="highlight">G</span> ·
+                <span class="highlight">F<sub>b</sub></span> ·
+                exp(−(C − S)² / 2σ²)
+            </div>
+        </header>
+
+        <div class="chart-wrapper">
+            <iframe id="chartFrame" srcdoc=""></iframe>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-grid">
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym c-sym">C</span> 当前挑战</span>
+                        <span class="param-value" id="valC">10.0</span>
+                    </div>
+                    <input type="range" id="sliderC" min="0" max="20" step="0.1" value="10.0">
+                    <div class="param-hint">拖动时图表以 C 为中心聚焦</div>
+                </div>
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym">S</span> 技能水平</span>
+                        <span class="param-value" id="valS">10.0</span>
+                    </div>
+                    <input type="range" id="sliderS" min="0" max="20" step="0.1" value="10.0">
+                    <div class="param-hint">峰值位置 (C=S)</div>
+                </div>
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym">H</span> 心流倾向</span>
+                        <span class="param-value" id="valH">5.0</span>
+                    </div>
+                    <input type="range" id="sliderH" min="0" max="10" step="0.1" value="5.0">
+                    <div class="param-hint">先天倾向</div>
+                </div>
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym">G</span> 目标清晰度</span>
+                        <span class="param-value" id="valG">5.0</span>
+                    </div>
+                    <input type="range" id="sliderG" min="0" max="10" step="0.1" value="5.0">
+                    <div class="param-hint">目标明确性</div>
+                </div>
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym">F<sub>b</sub></span> 即时反馈</span>
+                        <span class="param-value" id="valFb">5.0</span>
+                    </div>
+                    <input type="range" id="sliderFb" min="0" max="10" step="0.1" value="5.0">
+                    <div class="param-hint">反馈强度</div>
+                </div>
+                <div class="param-group">
+                    <div class="param-header">
+                        <span class="param-name"><span class="sym">σ</span> 匹配敏感度</span>
+                        <span class="param-value" id="valSigma">2.0</span>
+                    </div>
+                    <input type="range" id="sliderSigma" min="0.5" max="8" step="0.1" value="2.0">
+                    <div class="param-hint">宽容度</div>
+                </div>
+            </div>
+
+            <div class="auto-demo-container">
+                <button id="autoDemoBtn">▶ 开始自动演示</button>
+                <button id="resetDemoBtn" disabled>↻ 重置</button>
+            </div>
+
+            <div class="params-config-container">
+                <details>
+                    <summary>⚙️ 参数设置</summary>
+                    <div style="padding:4px 0 8px;overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>变量</th>
+                                    <th>初始值</th>
+                                    <th>峰值</th>
+                                    <th>运行时间 (s)</th>
+                                    <th>等待开始 (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>S</td>
+                                    <td><input type="number" id="cfgSStart" value="0" step="0.1" min="0" max="20"></td>
+                                    <td><input type="number" id="cfgSEnd" value="10" step="0.1" min="0" max="20"></td>
+                                    <td><input type="number" id="cfgSDuration" value="10" step="0.1" min="0"></td>
+                                    <td><input type="number" id="cfgSDelay" value="0" step="0.1" min="0"></td>
+                                </tr>
+                                <tr>
+                                    <td>H</td>
+                                    <td><input type="number" id="cfgHStart" value="0" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgHEnd" value="10" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgHDuration" value="7" step="0.1" min="0"></td>
+                                    <td><input type="number" id="cfgHDelay" value="3" step="0.1" min="0"></td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td><input type="number" id="cfgGStart" value="0" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgGEnd" value="10" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgGDuration" value="6.3" step="0.1" min="0"></td>
+                                    <td><input type="number" id="cfgGDelay" value="3.7" step="0.1" min="0"></td>
+                                </tr>
+                                <tr>
+                                    <td>Fb</td>
+                                    <td><input type="number" id="cfgFbStart" value="0" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgFbEnd" value="10" step="0.1" min="0" max="10"></td>
+                                    <td><input type="number" id="cfgFbDuration" value="5.67" step="0.1" min="0"></td>
+                                    <td><input type="number" id="cfgFbDelay" value="4.33" step="0.1" min="0"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:right;">
+                            * 所有变量将在「运行时间+等待开始」的最大值时刻同时达到峰值
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <div class="peak-info">
+                <span class="peak-item">
+                    <span class="label">🏔️ 峰值</span>
+                    <span class="number gold" id="peakValue">—</span>
+                </span>
+                <span class="peak-item">
+                    <span class="label">📍 峰值 C =</span>
+                    <span class="number" id="peakC">—</span>
+                </span>
+                <span class="peak-item">
+                    <span class="label">🔘 当前 C =</span>
+                    <span class="number current" id="currentC">10.0</span>
+                </span>
+                <span class="peak-item">
+                    <span class="label">📊 当前 A =</span>
+                    <span class="number current" id="currentA">—</span>
+                </span>
+            </div>
+            <div class="preset-buttons">
+                <button data-preset="flow"><span class="emoji">🔥</span>心流巅峰</button>
+                <button data-preset="anxiety"><span class="emoji">😰</span>焦虑区</button>
+                <button data-preset="boredom"><span class="emoji">😴</span>无聊区</button>
+                <button data-preset="nofeedback"><span class="emoji">🔇</span>反馈缺失</button>
+            </div>
+        </div>
+
+        <div class="legend-note">
+            <strong>✦ 固定宽高比 · 全端手势 ✦</strong>
+            容器 16:9 自适应，iframe 支持鼠标拖拽/滚轮缩放、双指缩放/单指拖拽，参数可调。
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const sliders = {
+                C: document.getElementById('sliderC'),
+                S: document.getElementById('sliderS'),
+                H: document.getElementById('sliderH'),
+                G: document.getElementById('sliderG'),
+                Fb: document.getElementById('sliderFb'),
+                sigma: document.getElementById('sliderSigma'),
+            };
+            const displays = {
+                C: document.getElementById('valC'),
+                S: document.getElementById('valS'),
+                H: document.getElementById('valH'),
+                G: document.getElementById('valG'),
+                Fb: document.getElementById('valFb'),
+                sigma: document.getElementById('valSigma'),
+            };
+            const peakValueEl = document.getElementById('peakValue');
+            const peakCEl = document.getElementById('peakC');
+            const currentCEl = document.getElementById('currentC');
+            const currentAEl = document.getElementById('currentA');
+            const frame = document.getElementById('chartFrame');
+
+            const cfg = {
+                S: { start: document.getElementById('cfgSStart'), end: document.getElementById('cfgSEnd'), duration: document
+                        .getElementById('cfgSDuration'), delay: document.getElementById('cfgSDelay') },
+                H: { start: document.getElementById('cfgHStart'), end: document.getElementById('cfgHEnd'), duration: document
+                        .getElementById('cfgHDuration'), delay: document.getElementById('cfgHDelay') },
+                G: { start: document.getElementById('cfgGStart'), end: document.getElementById('cfgGEnd'), duration: document
+                        .getElementById('cfgGDuration'), delay: document.getElementById('cfgGDelay') },
+                Fb: { start: document.getElementById('cfgFbStart'), end: document.getElementById('cfgFbEnd'), duration: document
+                        .getElementById('cfgFbDuration'), delay: document.getElementById('cfgFbDelay') },
+            };
+            const allConfigInputs = document.querySelectorAll('.params-config-container input[type="number"]');
+
+            const PRESETS = {
+                flow: { C: 10, S: 10, H: 10, G: 10, Fb: 10, sigma: 1.5 },
+                anxiety: { C: 16, S: 2.5, H: 8, G: 8, Fb: 8, sigma: 2.0 },
+                boredom: { C: 4, S: 17.5, H: 8, G: 8, Fb: 8, sigma: 2.0 },
+                nofeedback: { C: 10, S: 10, H: 8, G: 8, Fb: 0, sigma: 2.0 },
+            };
+
+            function readConfig() {
+                const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+                const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+                return {
+                    S: { start: clamp(getVal('cfgSStart'), 0, 20), end: clamp(getVal('cfgSEnd'), 0, 20), duration: Math.max(0,
+                            getVal('cfgSDuration')), delay: Math.max(0, getVal('cfgSDelay')) },
+                    H: { start: clamp(getVal('cfgHStart'), 0, 10), end: clamp(getVal('cfgHEnd'), 0, 10), duration: Math.max(0,
+                            getVal('cfgHDuration')), delay: Math.max(0, getVal('cfgHDelay')) },
+                    G: { start: clamp(getVal('cfgGStart'), 0, 10), end: clamp(getVal('cfgGEnd'), 0, 10), duration: Math.max(0,
+                            getVal('cfgGDuration')), delay: Math.max(0, getVal('cfgGDelay')) },
+                    Fb: { start: clamp(getVal('cfgFbStart'), 0, 10), end: clamp(getVal('cfgFbEnd'), 0, 10), duration: Math.max(
+                            0, getVal('cfgFbDuration')), delay: Math.max(0, getVal('cfgFbDelay')) }
+                };
+            }
+
+            function resetConfigToDefault() {
+                const defaults = { S: { start: 0, end: 10, duration: 10, delay: 0 }, H: { start: 0, end: 10, duration: 7,
+                        delay: 3 }, G: { start: 0, end: 10, duration: 6.3, delay: 3.7 }, Fb: { start: 0, end: 10,
+                        duration: 5.67, delay: 4.33 } };
+                for (let key of ['S', 'H', 'G', 'Fb']) {
+                    document.getElementById('cfg' + key + 'Start').value = defaults[key].start;
+                    document.getElementById('cfg' + key + 'End').value = defaults[key].end;
+                    document.getElementById('cfg' + key + 'Duration').value = defaults[key].duration;
+                    document.getElementById('cfg' + key + 'Delay').value = defaults[key].delay;
+                }
+            }
+
+            function setConfigEnabled(enabled) {
+                allConfigInputs.forEach(inp => inp.disabled = !enabled);
+            }
+
+            function sendParams() {
+                const data = {
+                    C: parseFloat(sliders.C.value) || 0,
+                    S: parseFloat(sliders.S.value) || 0,
+                    H: parseFloat(sliders.H.value) || 0,
+                    G: parseFloat(sliders.G.value) || 0,
+                    Fb: parseFloat(sliders.Fb.value) || 0,
+                    sigma: parseFloat(sliders.sigma.value) || 0.5,
+                };
+                displays.C.textContent = data.C.toFixed(1);
+                displays.S.textContent = data.S.toFixed(1);
+                displays.H.textContent = data.H.toFixed(1);
+                displays.G.textContent = data.G.toFixed(1);
+                displays.Fb.textContent = data.Fb.toFixed(1);
+                displays.sigma.textContent = data.sigma.toFixed(1);
+                currentCEl.textContent = data.C.toFixed(1);
+                if (frame.contentWindow) {
+                    frame.contentWindow.postMessage(data, '*');
+                }
+            }
+
+            function loadPreset(name) {
+                const p = PRESETS[name];
+                if (!p) return;
+                if (isAnimating || isPaused) {
+                    stopDemoAndResetState(false);
+                }
+                sliders.C.value = p.C;
+                sliders.S.value = p.S;
+                sliders.H.value = p.H;
+                sliders.G.value = p.G;
+                sliders.Fb.value = p.Fb;
+                sliders.sigma.value = p.sigma;
+                sendParams();
+            }
+
+            let animId = null;
+            let isAnimating = false;
+            let isPaused = false;
+            let totalElapsed = 0;
+            let lastTimestamp = null;
+
+            function setSlidersEnabled(enabled) {
+                for (let key in sliders) {
+                    sliders[key].disabled = !enabled;
+                }
+            }
+
+            function getTotalDuration(cfg) {
+                let maxEnd = 0;
+                for (let key of ['S', 'H', 'G', 'Fb']) {
+                    const d = cfg[key].delay + cfg[key].duration;
+                    if (d > maxEnd) maxEnd = d;
+                }
+                return maxEnd;
+            }
+
+            function initDemoState() {
+                const cfg2 = readConfig();
+                sliders.S.value = cfg2.S.start;
+                sliders.H.value = cfg2.H.start;
+                sliders.G.value = cfg2.G.start;
+                sliders.Fb.value = cfg2.Fb.start;
+                sliders.C.value = 10;
+                sliders.sigma.value = 2;
+                sendParams();
+            }
+
+            function setAllToPeak() {
+                const cfg2 = readConfig();
+                sliders.S.value = cfg2.S.end;
+                sliders.H.value = cfg2.H.end;
+                sliders.G.value = cfg2.G.end;
+                sliders.Fb.value = cfg2.Fb.end;
+                sendParams();
+            }
+
+            function stopDemoAndResetState(resetValues) {
+                if (animId) {
+                    cancelAnimationFrame(animId);
+                    animId = null;
+                }
+                isAnimating = false;
+                isPaused = false;
+                lastTimestamp = null;
+                totalElapsed = 0;
+                setSlidersEnabled(true);
+                setConfigEnabled(true);
+                document.getElementById('autoDemoBtn').textContent = '▶ 开始自动演示';
+                document.getElementById('autoDemoBtn').classList.remove('running');
+                document.getElementById('resetDemoBtn').disabled = true;
+                if (resetValues) {
+                    initDemoState();
+                }
+            }
+
+            function pauseDemo() {
+                if (animId) {
+                    cancelAnimationFrame(animId);
+                    animId = null;
+                }
+                isAnimating = false;
+                isPaused = true;
+                document.getElementById('autoDemoBtn').textContent = '▶ 继续演示';
+                document.getElementById('autoDemoBtn').classList.remove('running');
+                document.getElementById('resetDemoBtn').disabled = false;
+            }
+
+            function resumeDemo() {
+                if (!isPaused) return;
+                isPaused = false;
+                isAnimating = true;
+                lastTimestamp = null;
+                document.getElementById('autoDemoBtn').textContent = '⏸ 暂停';
+                document.getElementById('autoDemoBtn').classList.add('running');
+                document.getElementById('resetDemoBtn').disabled = true;
+                animId = requestAnimationFrame(step);
+            }
+
+            function resetDemo() {
+                if (isAnimating || isPaused) {
+                    stopDemoAndResetState(true);
+                }
+                resetConfigToDefault();
+                initDemoState();
+                document.getElementById('autoDemoBtn').textContent = '▶ 开始自动演示';
+                document.getElementById('autoDemoBtn').classList.remove('running');
+                document.getElementById('resetDemoBtn').disabled = true;
+                setSlidersEnabled(true);
+                setConfigEnabled(true);
+                totalElapsed = 0;
+            }
+
+            function step(timestamp) {
+                if (!isAnimating) return;
+                if (isPaused) return;
+                if (lastTimestamp === null) {
+                    lastTimestamp = timestamp;
+                    animId = requestAnimationFrame(step);
+                    return;
+                }
+                const delta = (timestamp - lastTimestamp) / 1000;
+                lastTimestamp = timestamp;
+                totalElapsed += delta;
+
+                const cfg2 = readConfig();
+                const T = getTotalDuration(cfg2);
+
+                if (totalElapsed >= T) {
+                    setAllToPeak();
+                    stopDemoAndResetState(false);
+                    document.getElementById('autoDemoBtn').textContent = '▶ 开始自动演示';
+                    document.getElementById('autoDemoBtn').classList.remove('running');
+                    document.getElementById('resetDemoBtn').disabled = false;
+                    setConfigEnabled(true);
+                    return;
+                }
+
+                const t = totalElapsed;
+
+                function calcValue(varCfg) {
+                    if (t < varCfg.delay) return varCfg.start;
+                    if (t >= varCfg.delay + varCfg.duration) return varCfg.end;
+                    const progress = (t - varCfg.delay) / varCfg.duration;
+                    return varCfg.start + (varCfg.end - varCfg.start) * progress;
+                }
+
+                sliders.S.value = calcValue(cfg2.S);
+                sliders.H.value = calcValue(cfg2.H);
+                sliders.G.value = calcValue(cfg2.G);
+                sliders.Fb.value = calcValue(cfg2.Fb);
+                sendParams();
+
+                animId = requestAnimationFrame(step);
+            }
+
+            function startDemo() {
+                if (isAnimating || isPaused) {
+                    stopDemoAndResetState(true);
+                }
+                initDemoState();
+                totalElapsed = 0;
+                isAnimating = true;
+                isPaused = false;
+                lastTimestamp = null;
+                setSlidersEnabled(false);
+                setConfigEnabled(false);
+                document.getElementById('autoDemoBtn').textContent = '⏸ 暂停';
+                document.getElementById('autoDemoBtn').classList.add('running');
+                document.getElementById('resetDemoBtn').disabled = true;
+                animId = requestAnimationFrame(step);
+            }
+
+            function toggleDemo() {
+                if (isAnimating) {
+                    pauseDemo();
+                } else if (isPaused) {
+                    resumeDemo();
+                } else {
+                    startDemo();
+                }
+            }
+
+            // ===== iframe 完整内容（含 PC 端鼠标拖拽+滚轮缩放） =====
+            const IFRAME_CONTENT = `<!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.5,user-scalable=yes">
+        <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:'Segoe UI','PingFang SC',sans-serif;touch-action:none}
+        #canvasWrapper{width:100%;height:100%;position:relative;overflow:hidden;touch-action:none;cursor:grab}
+        #canvasWrapper:active{cursor:grabbing}
+        canvas{display:block;width:100%;height:auto;border-radius:14px;background:#fff;transform-origin:0 0;touch-action:none;pointer-events:auto}
+        #tooltip{position:fixed;pointer-events:none;background:rgba(15,23,42,0.88);backdrop-filter:blur(6px);color:#f1f5f9;padding:6px 12px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:none;border:1px solid rgba(255,255,255,0.08);line-height:1.6;z-index:10}
+        #tooltip .tip-label{opacity:0.7;font-weight:400}
+        #tooltip .tip-value{font-weight:600;color:#60a5fa}
+        </style>
+        </head>
+        <body>
+        <div id="canvasWrapper"><canvas id="chartCanvas" width="1000" height="600"></canvas></div>
+        <div id="tooltip"><span class="tip-label">C = </span><span class="tip-value" id="tipC">—</span><br><span class="tip-label">A<sub>flow</sub> = </span><span class="tip-value" id="tipA">—</span></div>
+        <script>
+        (function(){
+        'use strict';
+        const canvas=document.getElementById('chartCanvas');
+        const ctx=canvas.getContext('2d');
+        const wrapper=document.getElementById('canvasWrapper');
+        const tooltip=document.getElementById('tooltip');
+        const tipC=document.getElementById('tipC');
+        const tipA=document.getElementById('tipA');
+        const PAD={top:36,bottom:46,left:56,right:32};
+        const N_POINTS=300;
+        let yMaxFixed=200;
+        const VIEWPORT_HALF=6;
+        const PIXELS_PER_UNIT=3;
+        let params={C:10,S:10,H:5,G:5,Fb:5,sigma:2.0};
+        let transformScale=1,transformOffsetX=0,transformOffsetY=0;
+        let lastTouchDist=0,lastTouchCenter={x:0,y:0};
+        let isTouching=false,touchStartPinch=false;
+        // PC 拖拽状态
+        let isDragging=false;
+        let dragStartMouseX=0,dragStartMouseY=0;
+        let dragStartOffsetX=0,dragStartOffsetY=0;
+
+        function applyTransform(){
+        canvas.style.transform='translate('+transformOffsetX+'px,'+transformOffsetY+'px) scale('+transformScale+')';
+        }
+
+        function alignBottom(){
+        const wrapperH=window.innerHeight;
+        const canvasH=canvas.offsetHeight;
+        if(canvasH*transformScale>wrapperH){
+        transformOffsetY=wrapperH-canvasH*transformScale;
+        }else{
+        transformOffsetY=0;
+        }
+        applyTransform();
+        }
+
+        function computeAflow(C,H,G,Fb,sigma,S){
+        const diff=C-S;
+        return H*G*Fb*Math.exp(-(diff*diff)/(2*sigma*sigma));
+        }
+
+        function draw(){
+        const C=params.C,S=params.S,H=params.H,G=params.G,Fb=params.Fb,sigma=params.sigma;
+        let xMin=C-VIEWPORT_HALF,xMax=C+VIEWPORT_HALF;
+        if(xMin<0){xMin=0;xMax=Math.min(20,VIEWPORT_HALF*2);}
+        if(xMax>20){xMax=20;xMin=Math.max(0,20-VIEWPORT_HALF*2);}
+        if(xMax-xMin<0.5){xMin=Math.max(0,C-0.25);xMax=Math.min(20,C+0.25);}
+        const globalData=[];
+        let maxVal=0,peakC=S,peakVal=H*G*Fb;
+        for(let i=0;i<=N_POINTS;i++){const c=0+(20-0)*i/N_POINTS;const val=computeAflow(c,H,G,Fb,sigma,S);globalData.push({C:c,val});if(val>maxVal){maxVal=val;peakC=c;peakVal=val;}}
+        if(H*G*Fb===0){peakVal=0;peakC=S;}
+        const visibleData=globalData.filter(d=>d.C>=xMin&&d.C<=xMax);
+        if(visibleData.length===0){visibleData.push({C:C,val:computeAflow(C,H,G,Fb,sigma,S)});}
+        const visibleMax=Math.max(0,...visibleData.map(d=>d.val));
+        let idealYMax=Math.max(200,Math.ceil(visibleMax*1.3/50)*50);
+        if(Math.abs(yMaxFixed-idealYMax)>50){yMaxFixed=idealYMax;}else{yMaxFixed=idealYMax;}
+        if(yMaxFixed<200)yMaxFixed=200;
+        const oldHeight=canvas.height;
+        const newHeight=Math.max(200,Math.round(yMaxFixed*PIXELS_PER_UNIT));
+        let heightChanged=false;
+        if(canvas.height!==newHeight){canvas.height=newHeight;heightChanged=true;}
+        const W=canvas.width;
+        const H_canvas=canvas.height-15;
+        const plotW=W-PAD.left-PAD.right;
+        const plotH=H_canvas-PAD.top-PAD.bottom;
+        const yMin=0,yMax=yMaxFixed;
+        function toCanvasX(c){return PAD.left+(c-xMin)/(xMax-xMin)*plotW;}
+        function toCanvasY(v){const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;return Math.min(Math.max(y,PAD.top),PAD.top+plotH);}
+        const rect=canvas.getBoundingClientRect();
+        const displayWidth=rect.width;
+        let scale=Math.min(1.2,Math.max(0.55,displayWidth/1000))*1.1;
+        const isPortrait=(rect.height>rect.width)||(window.innerHeight>window.innerWidth);
+        const portraitMultiplier=isPortrait?1.25:1.0;
+        const fontSize={tick:Math.round(12*scale*portraitMultiplier),axis:Math.round(14*scale*portraitMultiplier),peak:Math.round(14*scale*portraitMultiplier),current:Math.round(13*scale*portraitMultiplier),small:Math.round(11*scale*portraitMultiplier)};
+        const minSize=isPortrait?18:10;
+        for(let k in fontSize)fontSize[k]=Math.max(minSize,fontSize[k]);
+
+        ctx.clearRect(0,0,W,H_canvas);
+        const bgGrad=ctx.createLinearGradient(0,0,0,H_canvas);
+        bgGrad.addColorStop(0,'#fafcff');bgGrad.addColorStop(1,'#f2f6fd');
+        ctx.fillStyle=bgGrad;ctx.fillRect(0,0,W,H_canvas);
+
+        ctx.save();
+        ctx.strokeStyle='#e6ecf5';ctx.lineWidth=0.8;ctx.setLineDash([4,6]);
+        let xStep=1;const range=xMax-xMin;if(range>8)xStep=2;else if(range>4)xStep=1;else xStep=0.5;
+        let startTick=Math.ceil(xMin/xStep)*xStep;
+        for(let c=startTick;c<=xMax;c+=xStep){if(c<xMin||c>xMax)continue;const x=toCanvasX(c);ctx.beginPath();ctx.moveTo(x,PAD.top);ctx.lineTo(x,H_canvas-PAD.bottom);ctx.stroke();}
+        const ySteps=5;
+        for(let i=0;i<=ySteps;i++){const v=yMin+(yMax-yMin)*i/ySteps;const y=toCanvasY(v);ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(W-PAD.right,y);ctx.stroke();}
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle='#334155';ctx.lineWidth=1.8;
+        ctx.beginPath();ctx.moveTo(PAD.left,H_canvas-PAD.bottom);ctx.lineTo(W-PAD.right,H_canvas-PAD.bottom);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(PAD.left,PAD.top);ctx.lineTo(PAD.left,H_canvas-PAD.bottom);ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle='#475569';ctx.font=fontSize.tick+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+        for(let c=startTick;c<=xMax;c+=xStep){if(c<xMin||c>xMax)continue;const x=toCanvasX(c);const label=xStep<1?c.toFixed(1):c.toFixed(0);ctx.fillText(label,x,H_canvas-PAD.bottom+6);}
+        ctx.textAlign='right';ctx.textBaseline='middle';
+        for(let i=0;i<=ySteps;i++){const v=yMin+(yMax-yMin)*i/ySteps;const y=toCanvasY(v);const label=v<0.01?'0':v.toFixed(v>10?0:1);ctx.fillText(label,PAD.left-8,y);}
+        ctx.fillStyle='#1e293b';ctx.font=fontSize.axis+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText('挑战 C',W/2,H_canvas-20);
+        ctx.save();ctx.translate(18,H_canvas/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('心流指数 A' + 'flow'.sub,0,0);ctx.restore();
+        ctx.restore();
+
+        if(visibleData.length>1){
+        ctx.save();
+        const grad=ctx.createLinearGradient(0,PAD.top,0,H_canvas-PAD.bottom);
+        grad.addColorStop(0,'rgba(37,99,235,0.25)');grad.addColorStop(0.5,'rgba(37,99,235,0.08)');grad.addColorStop(1,'rgba(37,99,235,0.01)');
+        ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(toCanvasX(visibleData[0].C),toCanvasY(0));
+        for(let i=0;i<visibleData.length;i++){ctx.lineTo(toCanvasX(visibleData[i].C),toCanvasY(visibleData[i].val));}
+        ctx.lineTo(toCanvasX(visibleData[visibleData.length-1].C),toCanvasY(0));ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();
+        ctx.strokeStyle='#2563eb';ctx.lineWidth=3.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.shadowColor='rgba(37,99,235,0.2)';ctx.shadowBlur=12;
+        ctx.beginPath();for(let i=0;i<visibleData.length;i++){const x=toCanvasX(visibleData[i].C);const y=toCanvasY(visibleData[i].val);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.restore();
+        ctx.save();ctx.strokeStyle='rgba(37,99,235,0.15)';ctx.lineWidth=12;ctx.lineJoin='round';ctx.lineCap='round';
+        ctx.beginPath();for(let i=0;i<visibleData.length;i++){const x=toCanvasX(visibleData[i].C);const y=toCanvasY(visibleData[i].val);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.restore();
+        }
+
+        if(peakVal>0||H*G*Fb===0){
+        const px=toCanvasX(peakC),py=toCanvasY(peakVal),inView=(peakC>=xMin&&peakC<=xMax);
+        if(inView){
+        ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,PAD.top);ctx.lineTo(px,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
+        ctx.save();const gradDot=ctx.createRadialGradient(px-3,py-3,2,px,py,18);gradDot.addColorStop(0,'#f97316');gradDot.addColorStop(0.6,'#ea580c');gradDot.addColorStop(1,'rgba(234,88,12,0.2)');ctx.shadowColor='rgba(234,88,12,0.45)';ctx.shadowBlur=20;ctx.beginPath();ctx.arc(px,py,10,0,2*Math.PI);ctx.fillStyle=gradDot;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
+        ctx.save();ctx.fillStyle='#0f172a';ctx.font=fontSize.peak+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const label='峰值 '+peakVal.toFixed(peakVal>10?1:2);const tw=ctx.measureText(label).width;const tx=px+14,ty=py-10;ctx.fillStyle='rgba(255,255,255,0.85)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(tx-4,ty-16,tw+12,26,6);ctx.fill();}else{ctx.fillRect(tx-4,ty-16,tw+12,26);}ctx.shadowBlur=0;ctx.fillStyle='#0f172a';ctx.textBaseline='bottom';ctx.fillText(label,tx,ty+2);ctx.restore();
+        }else{
+        ctx.save();ctx.fillStyle='#f97316';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign=peakC<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=peakC<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('◀ 峰值 C='+peakC.toFixed(1),edgeX,PAD.top+18);ctx.restore();
+        }
+        }
+
+        if(S>=xMin&&S<=xMax){
+        const sx=toCanvasX(S);
+        ctx.save();ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(99,102,241,0.3)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sx,PAD.top);ctx.lineTo(sx,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
+        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('S = '+S.toFixed(1),sx,PAD.top-2);ctx.restore();
+        }else{
+        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign=S<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=S<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('S='+S.toFixed(1)+(S<xMin?' ▶':' ◀'),edgeX,PAD.top+38);ctx.restore();
+        }
+
+        const currentA=computeAflow(C,H,G,Fb,sigma,S);
+        const cx=toCanvasX(C),cy=toCanvasY(currentA);
+        ctx.save();ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(220,38,38,0.6)';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(cx,PAD.top);ctx.lineTo(cx,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
+        ctx.save();const gradRed=ctx.createRadialGradient(cx-2,cy-2,2,cx,cy,14);gradRed.addColorStop(0,'#ef4444');gradRed.addColorStop(0.7,'#dc2626');gradRed.addColorStop(1,'rgba(220,38,38,0.15)');ctx.shadowColor='rgba(220,38,38,0.5)';ctx.shadowBlur=16;ctx.beginPath();ctx.arc(cx,cy,8,0,2*Math.PI);ctx.fillStyle=gradRed;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
+        ctx.save();ctx.fillStyle='#0f172a';ctx.font=fontSize.current+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const labelCur='C='+C.toFixed(1)+'  A='+currentA.toFixed(currentA>10?1:2);const twCur=ctx.measureText(labelCur).width;const txCur=cx+14,tyCur=cy-8;ctx.fillStyle='rgba(255,255,255,0.9)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(txCur-4,tyCur-15,twCur+12,24,6);ctx.fill();}else{ctx.fillRect(txCur-4,tyCur-15,twCur+12,24);}ctx.shadowBlur=0;ctx.fillStyle='#dc2626';ctx.textBaseline='bottom';ctx.fillText(labelCur,txCur,tyCur+2);ctx.restore();
+
+        const bandWidth=sigma*1.2;
+        const leftBand=Math.max(xMin,S-bandWidth),rightBand=Math.min(xMax,S+bandWidth);
+        if(leftBand<rightBand&&bandWidth>0.1){
+        ctx.save();ctx.fillStyle='rgba(52,211,153,0.08)';ctx.strokeStyle='rgba(52,211,153,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,6]);const x1=toCanvasX(leftBand),x2=toCanvasX(rightBand);ctx.fillRect(x1,PAD.top,x2-x1,plotH);ctx.strokeRect(x1,PAD.top,x2-x1,plotH);ctx.restore();
+        ctx.save();ctx.fillStyle='rgba(16,185,129,0.6)';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';const midX=(x1+x2)/2;ctx.fillText('✦ 心流匹配区 ✦',midX,PAD.top-6);ctx.restore();
+        }
+
+        ctx.save();ctx.strokeStyle='#e9edf4';ctx.lineWidth=1;ctx.strokeRect(PAD.left,PAD.top,plotW,plotH);ctx.restore();
+
+        if(heightChanged){requestAnimationFrame(function(){alignBottom();});}
+
+        if(window.parent){
+        window.parent.postMessage({type:'updateInfo',peakValue:peakVal.toFixed(peakVal>10?1:2),peakC:peakC.toFixed(1),currentA:currentA.toFixed(currentA>10?1:2)},'*');
+        }
+        }
+
+        // ---- PC 鼠标事件 ----
+        wrapper.addEventListener('mousedown',function(e){
+        if(e.button!==0)return;
+        isDragging=true;
+        dragStartMouseX=e.clientX;
+        dragStartMouseY=e.clientY;
+        dragStartOffsetX=transformOffsetX;
+        dragStartOffsetY=transformOffsetY;
+        wrapper.style.cursor='grabbing';
+        e.preventDefault();
+        });
+
+        window.addEventListener('mousemove',function(e){
+        if(!isDragging)return;
+        const dx=e.clientX-dragStartMouseX;
+        const dy=e.clientY-dragStartMouseY;
+        transformOffsetX=dragStartOffsetX+dx;
+        transformOffsetY=dragStartOffsetY+dy;
+        applyTransform();
+        });
+
+        window.addEventListener('mouseup',function(){
+        if(isDragging){
+        isDragging=false;
+        wrapper.style.cursor='grab';
+        }
+        });
+
+        // ---- 鼠标滚轮缩放 ----
+        wrapper.addEventListener('wheel',function(e){
+        e.preventDefault();
+        const delta=e.deltaY>0?0.9:1.1;
+        const newScale=Math.min(3,Math.max(0.5,transformScale*delta));
+        // 以鼠标位置为中心缩放
+        const rect=wrapper.getBoundingClientRect();
+        const centerX=e.clientX-rect.left;
+        const centerY=e.clientY-rect.top;
+        // 计算缩放中心点在 canvas 坐标系中的位置
+        const ratio=newScale/transformScale;
+        // 调整偏移使鼠标位置保持不动
+        transformOffsetX=centerX-(centerX-transformOffsetX)*ratio;
+        transformOffsetY=centerY-(centerY-transformOffsetY)*ratio;
+        transformScale=newScale;
+        applyTransform();
+        },{passive:false});
+
+        // ---- 鼠标悬停工具提示 ----
+        function handleMouseMove(e){
+        const rect=canvas.getBoundingClientRect();
+        const scaleX=canvas.width/rect.width,scaleY=canvas.height/rect.height;
+        const mouseX=(e.clientX-rect.left)*scaleX,mouseY=(e.clientY-rect.top)*scaleY;
+        const plotW=canvas.width-PAD.left-PAD.right,plotH=canvas.height-PAD.top-PAD.bottom;
+        if(mouseX<PAD.left||mouseX>PAD.left+plotW||mouseY<PAD.top||mouseY>PAD.top+plotH){tooltip.style.display='none';return;}
+        const C=params.C;let xMin=C-VIEWPORT_HALF,xMax=C+VIEWPORT_HALF;if(xMin<0){xMin=0;xMax=Math.min(20,VIEWPORT_HALF*2);}if(xMax>20){xMax=20;xMin=Math.max(0,20-VIEWPORT_HALF*2);}
+        const c=xMin+(mouseX-PAD.left)/plotW*(xMax-xMin);const clampedC=Math.min(Math.max(c,xMin),xMax);
+        const val=computeAflow(clampedC,params.H,params.G,params.Fb,params.sigma,params.S);
+        tipC.textContent=clampedC.toFixed(1);tipA.textContent=val.toFixed(val>10?1:3);
+        const toolX=e.clientX-rect.left+14,toolY=e.clientY-rect.top-8;
+        tooltip.style.left=Math.min(toolX,window.innerWidth-160)+'px';
+        tooltip.style.top=Math.min(Math.max(toolY,8),window.innerHeight-60)+'px';
+        tooltip.style.display='block';
+        }
+        function handleMouseLeave(){tooltip.style.display='none';}
+        canvas.addEventListener('mousemove',handleMouseMove);
+        canvas.addEventListener('mouseleave',handleMouseLeave);
+        // 移动端触摸事件保留（已存在）
+        canvas.addEventListener('touchmove',function(e){e.preventDefault();const touch=e.touches[0];handleMouseMove({clientX:touch.clientX,clientY:touch.clientY});},{passive:false});
+        canvas.addEventListener('touchend',handleMouseLeave);
+
+        // ---- 移动端手势（touch） ----
+        wrapper.addEventListener('touchstart',function(e){
+        if(e.touches.length===1){isTouching=true;touchStartPinch=false;lastTouchCenter={x:e.touches[0].clientX,y:e.touches[0].clientY};}
+        else if(e.touches.length===2){touchStartPinch=true;isTouching=true;const dx=e.touches[0].clientX-e.touches[1].clientX;const dy=e.touches[0].clientY-e.touches[1].clientY;lastTouchDist=Math.sqrt(dx*dx+dy*dy);lastTouchCenter={x:(e.touches[0].clientX+e.touches[1].clientX)/2,y:(e.touches[0].clientY+e.touches[1].clientY)/2};}
+        e.preventDefault();
+        },{passive:false});
+
+        wrapper.addEventListener('touchmove',function(e){
+        e.preventDefault();
+        if(!isTouching)return;
+        if(e.touches.length===1&&!touchStartPinch){
+        const dx=e.touches[0].clientX-lastTouchCenter.x,dy=e.touches[0].clientY-lastTouchCenter.y;
+        transformOffsetX+=dx;transformOffsetY+=dy;
+        lastTouchCenter.x=e.touches[0].clientX;lastTouchCenter.y=e.touches[0].clientY;
+        applyTransform();
+        }else if(e.touches.length===2&&touchStartPinch){
+        const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        const scaleFactor=dist/lastTouchDist;
+        const newScale=Math.min(3,Math.max(0.5,transformScale*scaleFactor));
+        const centerX=(e.touches[0].clientX+e.touches[1].clientX)/2,centerY=(e.touches[0].clientY+e.touches[1].clientY)/2;
+        const ratio=newScale/transformScale;
+        transformOffsetX=centerX-(centerX-transformOffsetX)*ratio;
+        transformOffsetY=centerY-(centerY-transformOffsetY)*ratio;
+        transformScale=newScale;
+        lastTouchDist=dist;lastTouchCenter.x=centerX;lastTouchCenter.y=centerY;
+        applyTransform();
+        }
+        },{passive:false});
+
+        wrapper.addEventListener('touchend',function(e){isTouching=false;touchStartPinch=false;});
+
+        // ---- 消息监听 ----
+        window.addEventListener('message',function(e){
+        const data=e.data;
+        if(typeof data==='object'&&data!==null&&data.C!==undefined){
+        params.C=data.C;params.S=data.S;params.H=data.H;params.G=data.G;params.Fb=data.Fb;params.sigma=data.sigma;
+        draw();
+        }
+        });
+
+        // ---- resize ----
+        let resizeTimer;
+        window.addEventListener('resize',function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(draw,80);});
+
+        draw();
+        })();
+        <\/script>
+        </body>
+        </html>`;
+
+            function initIframe() {
+                frame.srcdoc = IFRAME_CONTENT;
+            }
+
+            window.addEventListener('message', function(e) {
+                const data = e.data;
+                if (data && data.type === 'updateInfo') {
+                    peakValueEl.textContent = data.peakValue;
+                    peakCEl.textContent = data.peakC;
+                    currentAEl.textContent = data.currentA;
+                }
+            });
+
+            for (let key in sliders) {
+                sliders[key].addEventListener('input', function() {
+                    sendParams();
+                });
+            }
+
+            document.querySelectorAll('[data-preset]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (isAnimating || isPaused) {
+                        stopDemoAndResetState(true);
+                    }
+                    loadPreset(this.dataset.preset);
+                });
+            });
+
+            document.getElementById('autoDemoBtn').addEventListener('click', toggleDemo);
+            document.getElementById('resetDemoBtn').addEventListener('click', resetDemo);
+
+            resetConfigToDefault();
+            initIframe();
+            frame.addEventListener('load', function() {
+                sendParams();
+            });
+
+            window.__flow = { sendParams, loadPreset, startDemo, pauseDemo, resumeDemo, resetDemo };
+
+        })();
+    </script>
+</body>
+</html>
