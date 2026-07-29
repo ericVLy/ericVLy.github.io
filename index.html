@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心流成瘾指数 · 动态视口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 32px 36px 40px;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 12px 20px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .title-group h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-group .emoji-badge {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .formula-box {
+            background: #f1f5f9;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #0f172a;
+            letter-spacing: 0.2px;
+            border: 1px solid #e2e8f0;
+            font-family: 'Times New Roman', 'CMU Serif', serif;
+            white-space: nowrap;
+        }
+
+        .formula-box sub {
+            font-size: 0.7em;
+        }
+
+        .formula-box .highlight {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            background: #fafcff;
+            border-radius: 20px;
+            border: 1px solid #e9edf4;
+            padding: 8px;
+            margin-bottom: 28px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        #chartCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 14px;
+            background: #ffffff;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        #tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(6px);
+            color: #f1f5f9;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            line-height: 1.5;
+            z-index: 10;
+        }
+        #tooltip .tip-label {
+            opacity: 0.7;
+            font-weight: 400;
+        }
+        #tooltip .tip-value {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .controls-section {
+            margin-bottom: 22px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 18px 20px;
+            background: #f8fafc;
+            padding: 20px 24px;
+            border-radius: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .param-group .param-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .param-group .param-header .param-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .param-group .param-header .param-name .sym {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 1.1em;
+            color: #2563eb;
+        }
+        .param-group .param-header .param-name .sym.c-sym {
+            color: #dc2626;
+        }
+        .param-group .param-header .param-value {
+            background: #e9edf4;
+            padding: 0 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            min-width: 38px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .param-group input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 4px;
+            background: #dce1ea;
+            outline: none;
+            margin: 4px 0 2px;
+        }
+        .param-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 2px solid #ffffff;
+        }
+        .param-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+        }
+        .param-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+        }
+        #sliderC::-webkit-slider-thumb {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
+        }
+        #sliderC::-moz-range-thumb {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
+        }
+
+        .param-group .param-hint {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 1px;
+        }
+
+        .footer-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px 24px;
+            padding: 16px 0 4px;
+            border-top: 1px solid #eef2f6;
+            margin-top: 4px;
+        }
+
+        .peak-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .peak-info .peak-item {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .peak-info .peak-item .label {
+            font-weight: 400;
+            color: #64748b;
+        }
+        .peak-info .peak-item .number {
+            font-weight: 700;
+            color: #2563eb;
+            font-variant-numeric: tabular-nums;
+            font-size: 1.1em;
+        }
+        .peak-info .peak-item .number.gold {
+            color: #b45309;
+        }
+        .peak-info .peak-item .number.current {
+            color: #dc2626;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-buttons button {
+            padding: 6px 18px;
+            border-radius: 40px;
+            border: 1px solid #dce1ea;
+            background: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.18s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        .preset-buttons button:hover {
+            background: #f1f5f9;
+            border-color: #b9c4d4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .preset-buttons button:active {
+            transform: translateY(0px);
+        }
+        .preset-buttons button .emoji {
+            margin-right: 5px;
+        }
+
+        .legend-note {
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed #e9edf4;
+        }
+        .legend-note strong {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px 28px; }
+            header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .title-group h1 { font-size: 21px; }
+            .formula-box { font-size: 15px; white-space: normal; text-align: center; padding: 6px 14px; }
+            .controls-grid { grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 16px; }
+            .footer-bar { flex-direction: column; align-items: stretch; gap: 14px; }
+            .peak-info { justify-content: center; }
+            .preset-buttons { justify-content: center; }
+        }
+        @media (max-width: 460px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .container { padding: 14px 12px 20px; }
+            .title-group h1 { font-size: 18px; }
+            .formula-box { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="title-group">
+            <span class="emoji-badge">⚡</span>
+            <h1>心流成瘾指数 · 动态视口</h1>
+        </div>
+        <div class="formula-box">
+            A<sub>flow</sub> =
+            <span class="highlight">H</span> ·
+            <span class="highlight">G</span> ·
+            <span class="highlight">F<sub>b</sub></span> ·
+            exp(−(C − S)² / 2σ²)
+        </div>
+    </header>
+
+    <div class="chart-wrapper">
+        <canvas id="chartCanvas" width="1000" height="600"></canvas>
+        <div id="tooltip">
+            <span class="tip-label">C = </span><span class="tip-value" id="tipC">—</span><br>
+            <span class="tip-label">A<sub>flow</sub> = </span><span class="tip-value" id="tipA">—</span>
+        </div>
+    </div>
+
+    <div class="controls-section">
+        <div class="controls-grid">
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym c-sym">C</span> 当前挑战</span>
+                    <span class="param-value" id="valC">10.0</span>
+                </div>
+                <input type="range" id="sliderC" min="0" max="20" step="0.1" value="10.0">
+                <div class="param-hint">拖动时图表以 C 为中心聚焦</div>
+            </div>
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym">S</span> 技能水平</span>
+                    <span class="param-value" id="valS">10.0</span>
+                </div>
+                <input type="range" id="sliderS" min="0" max="20" step="0.1" value="10.0">
+                <div class="param-hint">峰值位置 (C=S)</div>
+            </div>
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym">H</span> 心流倾向</span>
+                    <span class="param-value" id="valH">5.0</span>
+                </div>
+                <input type="range" id="sliderH" min="0" max="10" step="0.1" value="5.0">
+                <div class="param-hint">先天倾向</div>
+            </div>
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym">G</span> 目标清晰度</span>
+                    <span class="param-value" id="valG">5.0</span>
+                </div>
+                <input type="range" id="sliderG" min="0" max="10" step="0.1" value="5.0">
+                <div class="param-hint">目标明确性</div>
+            </div>
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym">F<sub>b</sub></span> 即时反馈</span>
+                    <span class="param-value" id="valFb">5.0</span>
+                </div>
+                <input type="range" id="sliderFb" min="0" max="10" step="0.1" value="5.0">
+                <div class="param-hint">反馈强度</div>
+            </div>
+            <div class="param-group">
+                <div class="param-header">
+                    <span class="param-name"><span class="sym">σ</span> 匹配敏感度</span>
+                    <span class="param-value" id="valSigma">2.0</span>
+                </div>
+                <input type="range" id="sliderSigma" min="0.5" max="8" step="0.1" value="2.0">
+                <div class="param-hint">宽容度</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bar">
+        <div class="peak-info">
+            <span class="peak-item">
+                <span class="label">🏔️ 峰值</span>
+                <span class="number gold" id="peakValue">—</span>
+            </span>
+            <span class="peak-item">
+                <span class="label">📍 峰值 C =</span>
+                <span class="number" id="peakC">—</span>
+            </span>
+            <span class="peak-item">
+                <span class="label">🔘 当前 C =</span>
+                <span class="number current" id="currentC">10.0</span>
+            </span>
+            <span class="peak-item">
+                <span class="label">📊 当前 A =</span>
+                <span class="number current" id="currentA">—</span>
+            </span>
+        </div>
+        <div class="preset-buttons">
+            <button data-preset="flow"><span class="emoji">🔥</span>心流巅峰</button>
+            <button data-preset="anxiety"><span class="emoji">😰</span>焦虑区</button>
+            <button data-preset="boredom"><span class="emoji">😴</span>无聊区</button>
+            <button data-preset="nofeedback"><span class="emoji">🔇</span>反馈缺失</button>
+        </div>
+    </div>
+
+    <div class="legend-note">
+        <strong>✦ 动态视口 ✦</strong> X 轴始终以当前挑战 <em>C</em> 为中心，范围 ±6 单位，帮助聚焦局部心流曲线。
+        峰值标记 (橙色) 与技能线 (紫色) 辅助定位全局最优。
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // ======= DOM 引用 =======
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const sliders = {
+            C: document.getElementById('sliderC'),
+            H: document.getElementById('sliderH'),
+            G: document.getElementById('sliderG'),
+            Fb: document.getElementById('sliderFb'),
+            sigma: document.getElementById('sliderSigma'),
+            S: document.getElementById('sliderS'),
+        };
+        const displays = {
+            C: document.getElementById('valC'),
+            H: document.getElementById('valH'),
+            G: document.getElementById('valG'),
+            Fb: document.getElementById('valFb'),
+            sigma: document.getElementById('valSigma'),
+            S: document.getElementById('valS'),
+        };
+        const peakValueEl = document.getElementById('peakValue');
+        const peakCEl = document.getElementById('peakC');
+        const currentCEl = document.getElementById('currentC');
+        const currentAEl = document.getElementById('currentA');
+        const tooltip = document.getElementById('tooltip');
+        const tipC = document.getElementById('tipC');
+        const tipA = document.getElementById('tipA');
+
+        // ======= 预设 =======
+        const PRESETS = {
+            flow: { C: 10, H: 10, G: 10, Fb: 10, sigma: 1.5, S: 10 },
+            anxiety: { C: 16, H: 8, G: 8, Fb: 8, sigma: 2.0, S: 2.5 },
+            boredom: { C: 4, H: 8, G: 8, Fb: 8, sigma: 2.0, S: 17.5 },
+            nofeedback: { C: 10, H: 8, G: 8, Fb: 0, sigma: 2.0, S: 10 },
+        };
+
+        // ======= 核心函数 =======
+        function computeAflow(C, H, G, Fb, sigma, S) {
+            const diff = C - S;
+            return H * G * Fb * Math.exp(-(diff * diff) / (2 * sigma * sigma));
+        }
+
+        // ======= 绘图 =======
+        const PAD = { top: 36, bottom: 46, left: 56, right: 32 };
+        const N_POINTS = 300;
+        const Y_MAX_FIXED = 200;
+        const VIEWPORT_HALF = 6; // 以 C 为中心，左右各 6 个单位
+
+        function draw() {
+            // 读取参数
+            const C = parseFloat(sliders.C.value) || 0;
+            const H = parseFloat(sliders.H.value) || 0;
+            const G = parseFloat(sliders.G.value) || 0;
+            const Fb = parseFloat(sliders.Fb.value) || 0;
+            const sigma = parseFloat(sliders.sigma.value) || 0.5;
+            const S = parseFloat(sliders.S.value) || 0;
+
+            // 更新显示
+            displays.C.textContent = C.toFixed(1);
+            displays.H.textContent = H.toFixed(1);
+            displays.G.textContent = G.toFixed(1);
+            displays.Fb.textContent = Fb.toFixed(1);
+            displays.sigma.textContent = sigma.toFixed(1);
+            displays.S.textContent = S.toFixed(1);
+            currentCEl.textContent = C.toFixed(1);
+
+            const currentA = computeAflow(C, H, G, Fb, sigma, S);
+            currentAEl.textContent = currentA.toFixed(currentA > 10 ? 1 : 2);
+
+            // ===== 动态 X 范围 (以 C 为中心) =====
+            let xMin = C - VIEWPORT_HALF;
+            let xMax = C + VIEWPORT_HALF;
+            // 边界限制到 [0, 20]
+            if (xMin < 0) { xMin = 0; xMax = Math.min(20, VIEWPORT_HALF * 2); }
+            if (xMax > 20) { xMax = 20; xMin = Math.max(0, 20 - VIEWPORT_HALF * 2); }
+            // 若视口宽度小于预设，则调整
+            if (xMax - xMin < 0.5) {
+                xMin = Math.max(0, C - 0.25);
+                xMax = Math.min(20, C + 0.25);
+            }
+
+            // ===== 计算曲线数据 (在视口范围内) =====
+            const data = [];
+            let maxVal = 0;
+            let peakC = S;
+            let peakVal = H * G * Fb;
+
+            // 先全局扫描以找到峰值 (但峰值可能不在视口内，标记仍显示)
+            // 我们用更精确的方法：在 [0,20] 上扫描
+            const globalData = [];
+            for (let i = 0; i <= N_POINTS; i++) {
+                const c = 0 + (20 - 0) * i / N_POINTS;
+                const val = computeAflow(c, H, G, Fb, sigma, S);
+                globalData.push({ C: c, val });
+                if (val > maxVal) { maxVal = val; peakC = c; peakVal = val; }
+            }
+            if (H * G * Fb === 0) { peakVal = 0; peakC = S; }
+
+            // 裁剪在视口内的数据用于绘制
+            const visibleData = globalData.filter(d => d.C >= xMin && d.C <= xMax);
+            if (visibleData.length === 0) {
+                // 如果没有数据点，强行补充当前 C 点
+                visibleData.push({ C: C, val: computeAflow(C, H, G, Fb, sigma, S) });
+            }
+
+            // ===== 尺寸 =====
+            const W = canvas.width;
+            const H_canvas = canvas.height;
+            const plotW = W - PAD.left - PAD.right;
+            const plotH = H_canvas - PAD.top - PAD.bottom;
+            const yMin = 0;
+            const yMax = Y_MAX_FIXED;
+
+            function toCanvasX(c) {
+                return PAD.left + (c - xMin) / (xMax - xMin) * plotW;
+            }
+            function toCanvasY(v) {
+                const y = PAD.top + plotH - (v - yMin) / (yMax - yMin) * plotH;
+                return Math.min(Math.max(y, PAD.top), PAD.top + plotH);
+            }
+
+            // ===== 清空 & 背景 =====
+            ctx.clearRect(0, 0, W, H_canvas);
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H_canvas);
+            bgGrad.addColorStop(0, '#fafcff');
+            bgGrad.addColorStop(1, '#f2f6fd');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H_canvas);
+
+            // ===== 网格 (动态刻度) =====
+            ctx.save();
+            ctx.strokeStyle = '#e6ecf5';
+            ctx.lineWidth = 0.8;
+            ctx.setLineDash([4, 6]);
+
+            // X 轴刻度：根据视口范围智能生成 (步长 1 或 2)
+            let xStep = 1;
+            const range = xMax - xMin;
+            if (range > 8) xStep = 2;
+            else if (range > 4) xStep = 1;
+            else xStep = 0.5;
+
+            let startTick = Math.ceil(xMin / xStep) * xStep;
+            for (let c = startTick; c <= xMax; c += xStep) {
+                if (c < xMin || c > xMax) continue;
+                const x = toCanvasX(c);
+                ctx.beginPath();
+                ctx.moveTo(x, PAD.top);
+                ctx.lineTo(x, H_canvas - PAD.bottom);
+                ctx.stroke();
+            }
+
+            // Y 轴网格 (固定)
+            const ySteps = 5;
+            for (let i = 0; i <= ySteps; i++) {
+                const v = yMin + (yMax - yMin) * i / ySteps;
+                const y = toCanvasY(v);
+                ctx.beginPath();
+                ctx.moveTo(PAD.left, y);
+                ctx.lineTo(W - PAD.right, y);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // ===== 坐标轴 =====
+            ctx.save();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(PAD.left, H_canvas - PAD.bottom);
+            ctx.lineTo(W - PAD.right, H_canvas - PAD.bottom);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(PAD.left, PAD.top);
+            ctx.lineTo(PAD.left, H_canvas - PAD.bottom);
+            ctx.stroke();
+            ctx.restore();
+
+            // ===== 刻度标签 =====
+            ctx.save();
+            ctx.fillStyle = '#475569';
+            ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let c = startTick; c <= xMax; c += xStep) {
+                if (c < xMin || c > xMax) continue;
+                const x = toCanvasX(c);
+                ctx.fillText(c.toFixed(xStep < 1 ? 1 : 0), x, H_canvas - PAD.bottom + 8);
+            }
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= ySteps; i++) {
+                const v = yMin + (yMax - yMin) * i / ySteps;
+                const y = toCanvasY(v);
+                const label = v < 0.01 ? '0' : v.toFixed(v > 10 ? 0 : 1);
+                ctx.fillText(label, PAD.left - 10, y);
+            }
+            // 轴标签
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '14px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('挑战 C', W / 2, H_canvas - 6);
+            ctx.save();
+            ctx.translate(20, H_canvas / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('心流指数 A' + 'flow'.sub, 0, 0);
+            ctx.restore();
+            ctx.restore();
+
+            // ===== 绘制曲线 (只绘制视口内部分) =====
+            if (visibleData.length > 1) {
+                ctx.save();
+                const grad = ctx.createLinearGradient(0, PAD.top, 0, H_canvas - PAD.bottom);
+                grad.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+                grad.addColorStop(0.5, 'rgba(37, 99, 235, 0.08)');
+                grad.addColorStop(1, 'rgba(37, 99, 235, 0.01)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.moveTo(toCanvasX(visibleData[0].C), toCanvasY(0));
+                for (let i = 0; i < visibleData.length; i++) {
+                    const x = toCanvasX(visibleData[i].C);
+                    const y = toCanvasY(visibleData[i].val);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(toCanvasX(visibleData[visibleData.length - 1].C), toCanvasY(0));
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3.5;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.shadowColor = 'rgba(37, 99, 235, 0.2)';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                for (let i = 0; i < visibleData.length; i++) {
+                    const x = toCanvasX(visibleData[i].C);
+                    const y = toCanvasY(visibleData[i].val);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(37, 99, 235, 0.15)';
+                ctx.lineWidth = 12;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                for (let i = 0; i < visibleData.length; i++) {
+                    const x = toCanvasX(visibleData[i].C);
+                    const y = toCanvasY(visibleData[i].val);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // ===== 峰值标记 (橙色) =====
+            if (peakVal > 0 || H * G * Fb === 0) {
+                const px = toCanvasX(peakC);
+                const py = toCanvasY(peakVal);
+                // 垂直虚线 (如果峰值在视口内)
+                if (peakC >= xMin && peakC <= xMax) {
+                    ctx.save();
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = 'rgba(37, 99, 235, 0.35)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(px, PAD.top);
+                    ctx.lineTo(px, H_canvas - PAD.bottom);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.save();
+                    const gradDot = ctx.createRadialGradient(px - 3, py - 3, 2, px, py, 18);
+                    gradDot.addColorStop(0, '#f97316');
+                    gradDot.addColorStop(0.6, '#ea580c');
+                    gradDot.addColorStop(1, 'rgba(234, 88, 12, 0.2)');
+                    ctx.shadowColor = 'rgba(234, 88, 12, 0.45)';
+                    ctx.shadowBlur = 20;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 10, 0, 2 * Math.PI);
+                    ctx.fillStyle = gradDot;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.fillStyle = '#0f172a';
+                    ctx.font = '600 14px "Segoe UI", system-ui, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    const label = '峰值 ' + peakVal.toFixed(peakVal > 10 ? 1 : 2);
+                    const tw = ctx.measureText(label).width;
+                    const tx = px + 16;
+                    const ty = py - 12;
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.shadowColor = 'rgba(0,0,0,0.06)';
+                    ctx.shadowBlur = 8;
+                    if (ctx.roundRect) {
+                        ctx.roundRect(tx - 6, ty - 18, tw + 16, 28, 8);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(tx - 6, ty - 18, tw + 16, 28);
+                    }
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#0f172a';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(label, tx, ty + 2);
+                    ctx.restore();
+                } else {
+                    // 峰值在视口外，在边缘显示指示箭头
+                    // 简单起见，仅显示文字提示在边缘
+                    ctx.save();
+                    ctx.fillStyle = '#f97316';
+                    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                    ctx.textAlign = peakC < xMin ? 'left' : 'right';
+                    ctx.textBaseline = 'bottom';
+                    const edgeX = peakC < xMin ? PAD.left + 2 : W - PAD.right - 2;
+                    ctx.fillText('◀ 峰值 C=' + peakC.toFixed(1), edgeX, PAD.top + 20);
+                    ctx.restore();
+                }
+                peakValueEl.textContent = peakVal.toFixed(peakVal > 10 ? 1 : 2);
+                peakCEl.textContent = peakC.toFixed(1);
+            } else {
+                peakValueEl.textContent = '0';
+                peakCEl.textContent = '—';
+            }
+
+            // ===== 技能 S 标记 =====
+            if (S >= xMin && S <= xMax) {
+                const sx = toCanvasX(S);
+                ctx.save();
+                ctx.setLineDash([3, 5]);
+                ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(sx, PAD.top);
+                ctx.lineTo(sx, H_canvas - PAD.bottom);
+                ctx.stroke();
+                ctx.restore();
+                ctx.save();
+                ctx.fillStyle = '#6366f1';
+                ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText('S = ' + S.toFixed(1), sx, PAD.top - 24);
+                ctx.restore();
+            } else {
+                // 在边缘显示提示
+                ctx.save();
+                ctx.fillStyle = '#6366f1';
+                ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = S < xMin ? 'left' : 'right';
+                ctx.textBaseline = 'bottom';
+                const edgeX = S < xMin ? PAD.left + 2 : W - PAD.right - 2;
+                ctx.fillText('S=' + S.toFixed(1) + (S < xMin ? ' ▶' : ' ◀'), edgeX, PAD.top + 40);
+                ctx.restore();
+            }
+
+            // ===== 当前 C 标记 (红色) =====
+            const cx = toCanvasX(C);
+            const cy = toCanvasY(currentA);
+            ctx.save();
+            ctx.setLineDash([4, 6]);
+            ctx.strokeStyle = 'rgba(220, 38, 38, 0.6)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(cx, PAD.top);
+            ctx.lineTo(cx, H_canvas - PAD.bottom);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            const gradRed = ctx.createRadialGradient(cx - 2, cy - 2, 2, cx, cy, 14);
+            gradRed.addColorStop(0, '#ef4444');
+            gradRed.addColorStop(0.7, '#dc2626');
+            gradRed.addColorStop(1, 'rgba(220, 38, 38, 0.15)');
+            ctx.shadowColor = 'rgba(220, 38, 38, 0.5)';
+            ctx.shadowBlur = 16;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = gradRed;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'bottom';
+            const labelCur = 'C=' + C.toFixed(1) + '  A=' + currentA.toFixed(currentA > 10 ? 1 : 2);
+            const twCur = ctx.measureText(labelCur).width;
+            const txCur = cx + 16;
+            const tyCur = cy - 10;
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.shadowColor = 'rgba(0,0,0,0.06)';
+            ctx.shadowBlur = 8;
+            if (ctx.roundRect) {
+                ctx.roundRect(txCur - 6, tyCur - 16, twCur + 16, 26, 8);
+                ctx.fill();
+            } else {
+                ctx.fillRect(txCur - 6, tyCur - 16, twCur + 16, 26);
+            }
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#dc2626';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(labelCur, txCur, tyCur + 2);
+            ctx.restore();
+
+            // ===== 心流匹配区 (以 S 为中心) =====
+            const bandWidth = sigma * 1.2;
+            const leftBand = Math.max(xMin, S - bandWidth);
+            const rightBand = Math.min(xMax, S + bandWidth);
+            if (leftBand < rightBand && bandWidth > 0.1) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 6]);
+                const x1 = toCanvasX(leftBand);
+                const x2 = toCanvasX(rightBand);
+                ctx.fillRect(x1, PAD.top, x2 - x1, plotH);
+                ctx.strokeRect(x1, PAD.top, x2 - x1, plotH);
+                ctx.restore();
+                ctx.save();
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+                ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                const midX = (x1 + x2) / 2;
+                ctx.fillText('✦ 心流匹配区 ✦', midX, PAD.top - 4);
+                ctx.restore();
+            }
+
+            // ===== 边框 =====
+            ctx.save();
+            ctx.strokeStyle = '#e9edf4';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(PAD.left, PAD.top, plotW, plotH);
+            ctx.restore();
+        }
+
+        // ======= 工具提示 (鼠标悬停) =======
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            const plotW = canvas.width - PAD.left - PAD.right;
+            const plotH = canvas.height - PAD.top - PAD.bottom;
+            if (mouseX < PAD.left || mouseX > PAD.left + plotW ||
+                mouseY < PAD.top || mouseY > PAD.top + plotH) {
+                tooltip.style.display = 'none';
+                return;
+            }
+            // 计算当前视口范围
+            const C = parseFloat(sliders.C.value) || 0;
+            let xMin = C - VIEWPORT_HALF;
+            let xMax = C + VIEWPORT_HALF;
+            if (xMin < 0) { xMin = 0; xMax = Math.min(20, VIEWPORT_HALF * 2); }
+            if (xMax > 20) { xMax = 20; xMin = Math.max(0, 20 - VIEWPORT_HALF * 2); }
+            const c = xMin + (mouseX - PAD.left) / plotW * (xMax - xMin);
+            const clampedC = Math.min(Math.max(c, xMin), xMax);
+            const H = parseFloat(sliders.H.value) || 0;
+            const G = parseFloat(sliders.G.value) || 0;
+            const Fb = parseFloat(sliders.Fb.value) || 0;
+            const sigma = parseFloat(sliders.sigma.value) || 0.5;
+            const S = parseFloat(sliders.S.value) || 0;
+            const val = computeAflow(clampedC, H, G, Fb, sigma, S);
+            tipC.textContent = clampedC.toFixed(1);
+            tipA.textContent = val.toFixed(val > 10 ? 1 : 3);
+            const toolX = e.clientX - rect.left + 16;
+            const toolY = e.clientY - rect.top - 10;
+            tooltip.style.left = Math.min(toolX, rect.width - 180) + 'px';
+            tooltip.style.top = Math.min(Math.max(toolY, 10), rect.height - 70) + 'px';
+            tooltip.style.display = 'block';
+        }
+
+        function handleMouseLeave() {
+            tooltip.style.display = 'none';
+        }
+
+        // ======= 预设加载 =======
+        function loadPreset(name) {
+            const p = PRESETS[name];
+            if (!p) return;
+            sliders.C.value = p.C;
+            sliders.H.value = p.H;
+            sliders.G.value = p.G;
+            sliders.Fb.value = p.Fb;
+            sliders.sigma.value = p.sigma;
+            sliders.S.value = p.S;
+            draw();
+        }
+
+        // ======= 事件绑定 =======
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', draw);
+        });
+
+        document.querySelectorAll('[data-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                loadPreset(btn.dataset.preset);
+            });
+        });
+
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseleave', handleMouseLeave);
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const fake = { clientX: touch.clientX, clientY: touch.clientY };
+            handleMouseMove(fake);
+        }, { passive: false });
+        canvas.addEventListener('touchend', handleMouseLeave);
+
+        // ======= 自适应 =======
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(draw, 80);
+        });
+
+        // ======= 初始绘制 =======
+        draw();
+
+        window.__flow = { draw, loadPreset, PRESETS, Y_MAX_FIXED };
+
+    })();
+</script>
+</body>
+</html>
