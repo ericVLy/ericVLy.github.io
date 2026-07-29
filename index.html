@@ -498,16 +498,19 @@
             // 基准比例：以 1000px 宽度为 1.0，最小 0.55，最大 1.2
             let scale = Math.min(1.2, Math.max(0.55, displayWidth / 1000));
             // 但为了移动端更清晰，稍微提高基数
-            scale = scale * 1.1; 
+            scale = scale * 1.1;
+            // 竖屏时放大字体以提升可读性（例如手机竖屏）
+            const isPortrait = (rect.height > rect.width) || (window.innerHeight > window.innerWidth);
+            const portraitMultiplier = isPortrait ? 1.25 : 1.0;
             const fontSize = {
-                tick: Math.round(12 * scale),
-                axis: Math.round(14 * scale),
-                peak: Math.round(14 * scale),
-                current: Math.round(13 * scale),
-                small: Math.round(11 * scale),
+                tick: Math.round(12 * scale * portraitMultiplier),
+                axis: Math.round(14 * scale * portraitMultiplier),
+                peak: Math.round(14 * scale * portraitMultiplier),
+                current: Math.round(13 * scale * portraitMultiplier),
+                small: Math.round(11 * scale * portraitMultiplier),
             };
-            // 保证最小可读
-            const minSize = 10;
+            // 保证最小可读，竖屏时最低字号更高
+            const minSize = isPortrait ? 18 : 10;
             fontSize.tick = Math.max(minSize, fontSize.tick);
             fontSize.axis = Math.max(minSize, fontSize.axis);
             fontSize.peak = Math.max(minSize, fontSize.peak);
