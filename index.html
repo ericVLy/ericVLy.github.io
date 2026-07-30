@@ -680,7 +680,7 @@
             ctx.rotate(-Math.PI / 2);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('心流指数 A' + 'flow'.sub, 0, 0);
+            ctx.fillText('心流指数 A_' + 'flow', 0, 0);
             ctx.restore();
             ctx.restore();
 
@@ -825,7 +825,7 @@
                 ctx.font = `${fontSize.small}px "Segoe UI", system-ui, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                ctx.fillText('S = ' + S.toFixed(1), sx, PAD.top - 2);
+                ctx.fillText('S = ' + S.toFixed(1), sx, PAD.top - 16);
                 ctx.restore();
             } else {
                 ctx.save();
@@ -913,7 +913,7 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
                 const midX = (x1 + x2) / 2;
-                ctx.fillText('✦ 心流匹配区 ✦', midX, PAD.top - 6);
+                ctx.fillText('✦ 心流匹配区 ✦', midX, PAD.top - 22);
                 ctx.restore();
             }
 
