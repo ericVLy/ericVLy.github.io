@@ -76,6 +76,34 @@
         .formula-box sub { font-size: 0.7em; }
         .formula-box .highlight { color: #2563eb; font-weight: 700; }
 
+        .nav-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: right;
+            margin-bottom: 8px;
+        }
+        .nav-btn {
+            padding: 5px 14px;
+            border-radius: 40px;
+            border: 1px solid #dce1ea;
+            background: #ffffff;
+            font-size: clamp(12px, 1.3vw, 14px);
+            font-weight: 500;
+            color: #334155;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.18s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            white-space: nowrap;
+        }
+        .nav-btn:hover {
+            background: #f1f5f9;
+            border-color: #b9c4d4;
+            transform: translateY(-1px);
+        }
+        .nav-btn:active { transform: translateY(0px); }
+
         .chart-wrapper {
             position: relative;
             background: #fafcff;
@@ -413,6 +441,10 @@
         </div>
     </div>
 
+    <div class="nav-buttons">
+        <a href="v2.html" class="nav-btn">🚀Go to V2</a>
+        <a href="v3.html" class="nav-btn">🚀Go to V3</a>
+    </div>
     <div class="legend-note">
         <strong>✦ 动态视口 & 自适应高度 ✦</strong> X 轴以 <em>C</em> 为中心，Y 轴最大值自动调整，
         Canvas 高度同步变化，控件区域始终保持在视口内。
