@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>十二颗心实现实操的前端/UI交互(V_2)</title>
+    <title>十二颗心实现实操的前端/UI交互(V_3)</title>
     <style>
         * {
             margin: 0;
@@ -89,18 +89,50 @@
             padding: 6px;
             margin-bottom: 24px;
             box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
-            aspect-ratio: 16 / 9;
             width: 100%;
+            min-height: 300px;
+            min-width: 200px;
+            max-width: 100%;
+            /* 移除 max-height 限制，高度自由 */
             overflow: hidden;
         }
 
         #chartFrame {
             width: 100%;
             height: 100%;
+            min-height: 280px;
             border: none;
             border-radius: 14px;
             display: block;
             background: #ffffff;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+            background: transparent;
+            z-index: 5;
+            touch-action: none;
+        }
+        .resize-handle::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-right: 2px solid #94a3b8;
+            border-bottom: 2px solid #94a3b8;
+            border-radius: 0 0 4px 0;
+            transition: border-color 0.2s;
+        }
+        .resize-handle:hover::after,
+        .resize-handle:active::after {
+            border-color: #2563eb;
         }
 
         .controls-section {
@@ -467,6 +499,9 @@
                 max-width: 60px;
                 padding: 2px 4px;
             }
+            .chart-wrapper {
+                min-height: 200px;
+            }
         }
         @media (max-width:460px) {
             .controls-grid {
@@ -481,6 +516,9 @@
             .formula-box {
                 font-size: 13px;
             }
+            .chart-wrapper {
+                min-height: 150px;
+            }
         }
     </style>
 </head>
@@ -490,7 +528,7 @@
         <header>
             <div class="title-group">
                 <span class="emoji-badge">⚡</span>
-                <h1>十二颗心实现实操的前端/UI交互(V_2)</h1>
+                <h1>十二颗心实现实操的前端/UI交互(V_3)</h1>
             </div>
             <div class="formula-box">
                 A<sub>flow</sub> =
@@ -501,8 +539,9 @@
             </div>
         </header>
 
-        <div class="chart-wrapper">
+        <div class="chart-wrapper" id="chartWrapper">
             <iframe id="chartFrame" srcdoc=""></iframe>
+            <div class="resize-handle" id="resizeHandle"></div>
         </div>
 
         <div class="controls-section">
@@ -643,8 +682,8 @@
         </div>
 
         <div class="legend-note">
-            <strong>✦ 固定宽高比 · 全端手势 ✦</strong>
-            容器 16:9 自适应，iframe 支持鼠标拖拽/滚轮缩放、双指缩放/单指拖拽，参数可调。
+            <strong>✦ v3 新特性 ✦</strong>
+            滚轮/双指缩放调整为 Y 轴范围缩放；右下角拖拽手柄支持鼠标和触摸，宽度受限，高度自由。
         </div>
     </div>
 
@@ -652,6 +691,56 @@
         (function() {
             'use strict';
 
+            // ===== 拖拽调整大小（宽度限制，高度自由） =====
+            const wrapper = document.getElementById('chartWrapper');
+            const handle = document.getElementById('resizeHandle');
+
+            let isResizing = false;
+            let startX, startY, startW, startH;
+
+            function startResize(e) {
+                e.preventDefault();
+                isResizing = true;
+                const rect = wrapper.getBoundingClientRect();
+                startW = rect.width;
+                startH = rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                startX = clientX;
+                startY = clientY;
+                document.addEventListener('mousemove', onResize);
+                document.addEventListener('mouseup', stopResize);
+                document.addEventListener('touchmove', onResize, { passive: false });
+                document.addEventListener('touchend', stopResize);
+            }
+
+            function onResize(e) {
+                if (!isResizing) return;
+                e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                let dw = clientX - startX;
+                let dh = clientY - startY;
+                // 宽度：限制最小 200，最大不超过父容器宽度
+                let newW = Math.min(wrapper.parentElement.clientWidth, Math.max(200, startW + dw));
+                // 高度：仅限制最小 200，不设最大
+                let newH = Math.max(200, startH + dh);
+                wrapper.style.width = newW + 'px';
+                wrapper.style.height = newH + 'px';
+            }
+
+            function stopResize() {
+                isResizing = false;
+                document.removeEventListener('mousemove', onResize);
+                document.removeEventListener('mouseup', stopResize);
+                document.removeEventListener('touchmove', onResize);
+                document.removeEventListener('touchend', stopResize);
+            }
+
+            handle.addEventListener('mousedown', startResize);
+            handle.addEventListener('touchstart', startResize, { passive: false });
+
+            // ===== 核心逻辑（与 v2 一致） =====
             const sliders = {
                 C: document.getElementById('sliderC'),
                 S: document.getElementById('sliderS'),
@@ -927,7 +1016,7 @@
                 }
             }
 
-            // ===== iframe 完整内容（含 PC 端鼠标拖拽+滚轮缩放） =====
+            // ===== iframe 内容 v3（Y 轴缩放 + 自适应尺寸） =====
             const IFRAME_CONTENT = `<!DOCTYPE html>
         <html lang="zh-CN">
         <head>
@@ -938,14 +1027,14 @@
         html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:'Segoe UI','PingFang SC',sans-serif;touch-action:none}
         #canvasWrapper{width:100%;height:100%;position:relative;overflow:hidden;touch-action:none;cursor:grab}
         #canvasWrapper:active{cursor:grabbing}
-        canvas{display:block;width:100%;height:auto;border-radius:14px;background:#fff;transform-origin:0 0;touch-action:none;pointer-events:auto}
+        canvas{display:block;width:100%;height:100%;border-radius:14px;background:#fff;touch-action:none;pointer-events:auto}
         #tooltip{position:fixed;pointer-events:none;background:rgba(15,23,42,0.88);backdrop-filter:blur(6px);color:#f1f5f9;padding:6px 12px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:none;border:1px solid rgba(255,255,255,0.08);line-height:1.6;z-index:10}
         #tooltip .tip-label{opacity:0.7;font-weight:400}
         #tooltip .tip-value{font-weight:600;color:#60a5fa}
         </style>
         </head>
         <body>
-        <div id="canvasWrapper"><canvas id="chartCanvas" width="1000" height="600"></canvas></div>
+        <div id="canvasWrapper"><canvas id="chartCanvas"></canvas></div>
         <div id="tooltip"><span class="tip-label">C = </span><span class="tip-value" id="tipC">—</span><br><span class="tip-label">A<sub>flow</sub> = </span><span class="tip-value" id="tipA">—</span></div>
         <script>
         (function(){
@@ -960,29 +1049,16 @@
         const N_POINTS=300;
         let yMaxFixed=200;
         const VIEWPORT_HALF=6;
-        const PIXELS_PER_UNIT=3;
         let params={C:10,S:10,H:5,G:5,Fb:5,sigma:2.0};
-        let transformScale=1,transformOffsetX=0,transformOffsetY=0;
+        let transformOffsetX=0,transformOffsetY=0;
         let lastTouchDist=0,lastTouchCenter={x:0,y:0};
         let isTouching=false,touchStartPinch=false;
-        // PC 拖拽状态
         let isDragging=false;
         let dragStartMouseX=0,dragStartMouseY=0;
         let dragStartOffsetX=0,dragStartOffsetY=0;
 
         function applyTransform(){
-        canvas.style.transform='translate('+transformOffsetX+'px,'+transformOffsetY+'px) scale('+transformScale+')';
-        }
-
-        function alignBottom(){
-        const wrapperH=window.innerHeight;
-        const canvasH=canvas.offsetHeight;
-        if(canvasH*transformScale>wrapperH){
-        transformOffsetY=wrapperH-canvasH*transformScale;
-        }else{
-        transformOffsetY=0;
-        }
-        applyTransform();
+        canvas.style.transform='translate('+transformOffsetX+'px,'+transformOffsetY+'px)';
         }
 
         function computeAflow(C,H,G,Fb,sigma,S){
@@ -992,39 +1068,42 @@
 
         function draw(){
         const C=params.C,S=params.S,H=params.H,G=params.G,Fb=params.Fb,sigma=params.sigma;
+        const wrapperRect=wrapper.getBoundingClientRect();
+        const dpr=window.devicePixelRatio||1;
+        const w=Math.floor(wrapperRect.width*dpr);
+        const h=Math.floor(wrapperRect.height*dpr);
+        if(canvas.width!==w||canvas.height!==h){
+        canvas.width=w;
+        canvas.height=h;
+        canvas.style.width=wrapperRect.width+'px';
+        canvas.style.height=wrapperRect.height+'px';
+        }
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr,dpr);
+        const W=wrapperRect.width;
+        const H_canvas=wrapperRect.height;
+        const plotW=W-PAD.left-PAD.right;
+        const plotH=H_canvas-PAD.top-PAD.bottom;
+        const yMin=0;
+        let yMax=yMaxFixed;
+
         let xMin=C-VIEWPORT_HALF,xMax=C+VIEWPORT_HALF;
         if(xMin<0){xMin=0;xMax=Math.min(20,VIEWPORT_HALF*2);}
         if(xMax>20){xMax=20;xMin=Math.max(0,20-VIEWPORT_HALF*2);}
         if(xMax-xMin<0.5){xMin=Math.max(0,C-0.25);xMax=Math.min(20,C+0.25);}
+
         const globalData=[];
         let maxVal=0,peakC=S,peakVal=H*G*Fb;
         for(let i=0;i<=N_POINTS;i++){const c=0+(20-0)*i/N_POINTS;const val=computeAflow(c,H,G,Fb,sigma,S);globalData.push({C:c,val});if(val>maxVal){maxVal=val;peakC=c;peakVal=val;}}
         if(H*G*Fb===0){peakVal=0;peakC=S;}
         const visibleData=globalData.filter(d=>d.C>=xMin&&d.C<=xMax);
         if(visibleData.length===0){visibleData.push({C:C,val:computeAflow(C,H,G,Fb,sigma,S)});}
+
         const visibleMax=Math.max(0,...visibleData.map(d=>d.val));
-        let idealYMax=Math.max(200,Math.ceil(visibleMax*1.3/50)*50);
-        if(Math.abs(yMaxFixed-idealYMax)>50){yMaxFixed=idealYMax;}else{yMaxFixed=idealYMax;}
-        if(yMaxFixed<200)yMaxFixed=200;
-        const oldHeight=canvas.height;
-        const newHeight=Math.max(200,Math.round(yMaxFixed*PIXELS_PER_UNIT));
-        let heightChanged=false;
-        if(canvas.height!==newHeight){canvas.height=newHeight;heightChanged=true;}
-        const W=canvas.width;
-        const H_canvas=canvas.height-15;
-        const plotW=W-PAD.left-PAD.right;
-        const plotH=H_canvas-PAD.top-PAD.bottom;
-        const yMin=0,yMax=yMaxFixed;
-        function toCanvasX(c){return PAD.left+(c-xMin)/(xMax-xMin)*plotW;}
-        function toCanvasY(v){const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;return Math.min(Math.max(y,PAD.top),PAD.top+plotH);}
-        const rect=canvas.getBoundingClientRect();
-        const displayWidth=rect.width;
-        let scale=Math.min(1.2,Math.max(0.55,displayWidth/1000))*1.1;
-        const isPortrait=(rect.height>rect.width)||(window.innerHeight>window.innerWidth);
-        const portraitMultiplier=isPortrait?1.25:1.0;
-        const fontSize={tick:Math.round(12*scale*portraitMultiplier),axis:Math.round(14*scale*portraitMultiplier),peak:Math.round(14*scale*portraitMultiplier),current:Math.round(13*scale*portraitMultiplier),small:Math.round(11*scale*portraitMultiplier)};
-        const minSize=isPortrait?18:10;
-        for(let k in fontSize)fontSize[k]=Math.max(minSize,fontSize[k]);
+        if(visibleMax>yMax){yMax=Math.max(yMax,Math.ceil(visibleMax*1.1));}
+
+        function toCanvasX(c){return PAD.left+(c-xMin)/(xMax-xMin)*plotW+transformOffsetX;}
+        function toCanvasY(v){const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH+transformOffsetY;return Math.min(Math.max(y,PAD.top),PAD.top+plotH);}
 
         ctx.clearRect(0,0,W,H_canvas);
         const bgGrad=ctx.createLinearGradient(0,0,0,H_canvas);
@@ -1046,12 +1125,13 @@
         ctx.beginPath();ctx.moveTo(PAD.left,PAD.top);ctx.lineTo(PAD.left,H_canvas-PAD.bottom);ctx.stroke();
         ctx.restore();
 
+        const fontSizeBase=Math.min(14,Math.max(10,W/80));
         ctx.save();
-        ctx.fillStyle='#475569';ctx.font=fontSize.tick+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillStyle='#475569';ctx.font=fontSizeBase+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
         for(let c=startTick;c<=xMax;c+=xStep){if(c<xMin||c>xMax)continue;const x=toCanvasX(c);const label=xStep<1?c.toFixed(1):c.toFixed(0);ctx.fillText(label,x,H_canvas-PAD.bottom+6);}
         ctx.textAlign='right';ctx.textBaseline='middle';
         for(let i=0;i<=ySteps;i++){const v=yMin+(yMax-yMin)*i/ySteps;const y=toCanvasY(v);const label=v<0.01?'0':v.toFixed(v>10?0:1);ctx.fillText(label,PAD.left-8,y);}
-        ctx.fillStyle='#1e293b';ctx.font=fontSize.axis+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillStyle='#1e293b';ctx.font=(fontSizeBase+2)+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
         ctx.fillText('挑战 C',W/2,H_canvas-20);
         ctx.save();ctx.translate(18,H_canvas/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('心流指数 A_' + 'flow',0,0);ctx.restore();
         ctx.restore();
@@ -1064,9 +1144,9 @@
         for(let i=0;i<visibleData.length;i++){ctx.lineTo(toCanvasX(visibleData[i].C),toCanvasY(visibleData[i].val));}
         ctx.lineTo(toCanvasX(visibleData[visibleData.length-1].C),toCanvasY(0));ctx.closePath();ctx.fill();ctx.restore();
         ctx.save();
-        ctx.strokeStyle='#2563eb';ctx.lineWidth=3.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.shadowColor='rgba(37,99,235,0.2)';ctx.shadowBlur=12;
+        ctx.strokeStyle='#2563eb';ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';ctx.shadowColor='rgba(37,99,235,0.2)';ctx.shadowBlur=12;
         ctx.beginPath();for(let i=0;i<visibleData.length;i++){const x=toCanvasX(visibleData[i].C);const y=toCanvasY(visibleData[i].val);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.restore();
-        ctx.save();ctx.strokeStyle='rgba(37,99,235,0.15)';ctx.lineWidth=12;ctx.lineJoin='round';ctx.lineCap='round';
+        ctx.save();ctx.strokeStyle='rgba(37,99,235,0.15)';ctx.lineWidth=10;ctx.lineJoin='round';ctx.lineCap='round';
         ctx.beginPath();for(let i=0;i<visibleData.length;i++){const x=toCanvasX(visibleData[i].C);const y=toCanvasY(visibleData[i].val);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.restore();
         }
 
@@ -1075,43 +1155,41 @@
         if(inView){
         ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,PAD.top);ctx.lineTo(px,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
         ctx.save();const gradDot=ctx.createRadialGradient(px-3,py-3,2,px,py,18);gradDot.addColorStop(0,'#f97316');gradDot.addColorStop(0.6,'#ea580c');gradDot.addColorStop(1,'rgba(234,88,12,0.2)');ctx.shadowColor='rgba(234,88,12,0.45)';ctx.shadowBlur=20;ctx.beginPath();ctx.arc(px,py,10,0,2*Math.PI);ctx.fillStyle=gradDot;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
-        ctx.save();ctx.fillStyle='#0f172a';ctx.font=fontSize.peak+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const label='峰值 '+peakVal.toFixed(peakVal>10?1:2);const tw=ctx.measureText(label).width;const tx=px+14,ty=py-10;ctx.fillStyle='rgba(255,255,255,0.85)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(tx-4,ty-16,tw+12,26,6);ctx.fill();}else{ctx.fillRect(tx-4,ty-16,tw+12,26);}ctx.shadowBlur=0;ctx.fillStyle='#0f172a';ctx.textBaseline='bottom';ctx.fillText(label,tx,ty+2);ctx.restore();
+        ctx.save();ctx.fillStyle='#0f172a';ctx.font=(fontSizeBase+2)+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const label='峰值 '+peakVal.toFixed(peakVal>10?1:2);const tw=ctx.measureText(label).width;const tx=px+14,ty=py-10;ctx.fillStyle='rgba(255,255,255,0.85)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(tx-4,ty-16,tw+12,26,6);ctx.fill();}else{ctx.fillRect(tx-4,ty-16,tw+12,26);}ctx.shadowBlur=0;ctx.fillStyle='#0f172a';ctx.textBaseline='bottom';ctx.fillText(label,tx,ty+2);ctx.restore();
         }else{
-        ctx.save();ctx.fillStyle='#f97316';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign=peakC<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=peakC<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('◀ 峰值 C='+peakC.toFixed(1),edgeX,PAD.top+18);ctx.restore();
+        ctx.save();ctx.fillStyle='#f97316';ctx.font=fontSizeBase+'px "Segoe UI", sans-serif';ctx.textAlign=peakC<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=peakC<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('◀ 峰值 C='+peakC.toFixed(1),edgeX,PAD.top+18);ctx.restore();
         }
         }
 
         if(S>=xMin&&S<=xMax){
         const sx=toCanvasX(S);
         ctx.save();ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(99,102,241,0.3)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sx,PAD.top);ctx.lineTo(sx,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
-        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('S = '+S.toFixed(1),sx,PAD.top-16);ctx.restore();
+        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSizeBase+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('S = '+S.toFixed(1),sx,PAD.top-16);ctx.restore();
         }else{
-        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign=S<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=S<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('S='+S.toFixed(1)+(S<xMin?' ▶':' ◀'),edgeX,PAD.top+38);ctx.restore();
+        ctx.save();ctx.fillStyle='#6366f1';ctx.font=fontSizeBase+'px "Segoe UI", sans-serif';ctx.textAlign=S<xMin?'left':'right';ctx.textBaseline='bottom';const edgeX=S<xMin?PAD.left+4:W-PAD.right-4;ctx.fillText('S='+S.toFixed(1)+(S<xMin?' ▶':' ◀'),edgeX,PAD.top+38);ctx.restore();
         }
 
         const currentA=computeAflow(C,H,G,Fb,sigma,S);
         const cx=toCanvasX(C),cy=toCanvasY(currentA);
         ctx.save();ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(220,38,38,0.6)';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(cx,PAD.top);ctx.lineTo(cx,H_canvas-PAD.bottom);ctx.stroke();ctx.restore();
         ctx.save();const gradRed=ctx.createRadialGradient(cx-2,cy-2,2,cx,cy,14);gradRed.addColorStop(0,'#ef4444');gradRed.addColorStop(0.7,'#dc2626');gradRed.addColorStop(1,'rgba(220,38,38,0.15)');ctx.shadowColor='rgba(220,38,38,0.5)';ctx.shadowBlur=16;ctx.beginPath();ctx.arc(cx,cy,8,0,2*Math.PI);ctx.fillStyle=gradRed;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
-        ctx.save();ctx.fillStyle='#0f172a';ctx.font=fontSize.current+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const labelCur='C='+C.toFixed(1)+'  A='+currentA.toFixed(currentA>10?1:2);const twCur=ctx.measureText(labelCur).width;const txCur=cx+14,tyCur=cy-8;ctx.fillStyle='rgba(255,255,255,0.9)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(txCur-4,tyCur-15,twCur+12,24,6);ctx.fill();}else{ctx.fillRect(txCur-4,tyCur-15,twCur+12,24);}ctx.shadowBlur=0;ctx.fillStyle='#dc2626';ctx.textBaseline='bottom';ctx.fillText(labelCur,txCur,tyCur+2);ctx.restore();
+        ctx.save();ctx.fillStyle='#0f172a';ctx.font=(fontSizeBase+2)+'px "Segoe UI", sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';const labelCur='C='+C.toFixed(1)+'  A='+currentA.toFixed(currentA>10?1:2);const twCur=ctx.measureText(labelCur).width;const txCur=cx+14,tyCur=cy-8;ctx.fillStyle='rgba(255,255,255,0.9)';ctx.shadowColor='rgba(0,0,0,0.06)';ctx.shadowBlur=8;if(ctx.roundRect){ctx.roundRect(txCur-4,tyCur-15,twCur+12,24,6);ctx.fill();}else{ctx.fillRect(txCur-4,tyCur-15,twCur+12,24);}ctx.shadowBlur=0;ctx.fillStyle='#dc2626';ctx.textBaseline='bottom';ctx.fillText(labelCur,txCur,tyCur+2);ctx.restore();
 
         const bandWidth=sigma*1.2;
         const leftBand=Math.max(xMin,S-bandWidth),rightBand=Math.min(xMax,S+bandWidth);
         if(leftBand<rightBand&&bandWidth>0.1){
         ctx.save();ctx.fillStyle='rgba(52,211,153,0.08)';ctx.strokeStyle='rgba(52,211,153,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,6]);const x1=toCanvasX(leftBand),x2=toCanvasX(rightBand);ctx.fillRect(x1,PAD.top,x2-x1,plotH);ctx.strokeRect(x1,PAD.top,x2-x1,plotH);ctx.restore();
-        ctx.save();ctx.fillStyle='rgba(16,185,129,0.6)';ctx.font=fontSize.small+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';const midX=(x1+x2)/2;ctx.fillText('✦ 心流匹配区 ✦',midX,PAD.top-22);ctx.restore();
+        ctx.save();ctx.fillStyle='rgba(16,185,129,0.6)';ctx.font=fontSizeBase+'px "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';const midX=(x1+x2)/2;ctx.fillText('✦ 心流匹配区 ✦',midX,PAD.top-22);ctx.restore();
         }
 
         ctx.save();ctx.strokeStyle='#e9edf4';ctx.lineWidth=1;ctx.strokeRect(PAD.left,PAD.top,plotW,plotH);ctx.restore();
-
-        if(heightChanged){requestAnimationFrame(function(){alignBottom();});}
 
         if(window.parent){
         window.parent.postMessage({type:'updateInfo',peakValue:peakVal.toFixed(peakVal>10?1:2),peakC:peakC.toFixed(1),currentA:currentA.toFixed(currentA>10?1:2)},'*');
         }
         }
 
-        // ---- PC 鼠标事件 ----
+        // ---- PC 鼠标拖拽 ----
         wrapper.addEventListener('mousedown',function(e){
         if(e.button!==0)return;
         isDragging=true;
@@ -1122,7 +1200,6 @@
         wrapper.style.cursor='grabbing';
         e.preventDefault();
         });
-
         window.addEventListener('mousemove',function(e){
         if(!isDragging)return;
         const dx=e.clientX-dragStartMouseX;
@@ -1131,43 +1208,34 @@
         transformOffsetY=dragStartOffsetY+dy;
         applyTransform();
         });
+        window.addEventListener('mouseup',function(){if(isDragging){isDragging=false;wrapper.style.cursor='grab';}});
 
-        window.addEventListener('mouseup',function(){
-        if(isDragging){
-        isDragging=false;
-        wrapper.style.cursor='grab';
-        }
-        });
-
-        // ---- 鼠标滚轮缩放 ----
+        // ---- 鼠标滚轮缩放（Y 轴范围） ----
         wrapper.addEventListener('wheel',function(e){
         e.preventDefault();
-        const delta=e.deltaY>0?0.9:1.1;
-        const newScale=Math.min(3,Math.max(0.5,transformScale*delta));
-        // 以鼠标位置为中心缩放
-        const rect=wrapper.getBoundingClientRect();
-        const centerX=e.clientX-rect.left;
-        const centerY=e.clientY-rect.top;
-        // 计算缩放中心点在 canvas 坐标系中的位置
-        const ratio=newScale/transformScale;
-        // 调整偏移使鼠标位置保持不动
-        transformOffsetX=centerX-(centerX-transformOffsetX)*ratio;
-        transformOffsetY=centerY-(centerY-transformOffsetY)*ratio;
-        transformScale=newScale;
-        applyTransform();
+        const factor=e.deltaY>0?1.1:0.9;
+        let newY=yMaxFixed*factor;
+        newY=Math.max(50,Math.min(2000,newY));
+        yMaxFixed=newY;
+        draw();
         },{passive:false});
 
-        // ---- 鼠标悬停工具提示 ----
+        // ---- 鼠标悬停 ----
         function handleMouseMove(e){
         const rect=canvas.getBoundingClientRect();
         const scaleX=canvas.width/rect.width,scaleY=canvas.height/rect.height;
         const mouseX=(e.clientX-rect.left)*scaleX,mouseY=(e.clientY-rect.top)*scaleY;
-        const plotW=canvas.width-PAD.left-PAD.right,plotH=canvas.height-PAD.top-PAD.bottom;
-        if(mouseX<PAD.left||mouseX>PAD.left+plotW||mouseY<PAD.top||mouseY>PAD.top+plotH){tooltip.style.display='none';return;}
-        const C=params.C;let xMin=C-VIEWPORT_HALF,xMax=C+VIEWPORT_HALF;if(xMin<0){xMin=0;xMax=Math.min(20,VIEWPORT_HALF*2);}if(xMax>20){xMax=20;xMin=Math.max(0,20-VIEWPORT_HALF*2);}
-        const c=xMin+(mouseX-PAD.left)/plotW*(xMax-xMin);const clampedC=Math.min(Math.max(c,xMin),xMax);
+        const plotW=canvas.width-PAD.left-PAD.right;
+        const plotH=canvas.height-PAD.top-PAD.bottom;
+        const C=params.C;
+        let xMin=C-VIEWPORT_HALF,xMax=C+VIEWPORT_HALF;
+        if(xMin<0){xMin=0;xMax=Math.min(20,VIEWPORT_HALF*2);}
+        if(xMax>20){xMax=20;xMin=Math.max(0,20-VIEWPORT_HALF*2);}
+        const c=xMin+(mouseX-PAD.left-transformOffsetX)/(plotW)*(xMax-xMin);
+        const clampedC=Math.min(Math.max(c,xMin),xMax);
         const val=computeAflow(clampedC,params.H,params.G,params.Fb,params.sigma,params.S);
-        tipC.textContent=clampedC.toFixed(1);tipA.textContent=val.toFixed(val>10?1:3);
+        tipC.textContent=clampedC.toFixed(1);
+        tipA.textContent=val.toFixed(val>10?1:3);
         const toolX=e.clientX-rect.left+14,toolY=e.clientY-rect.top-8;
         tooltip.style.left=Math.min(toolX,window.innerWidth-160)+'px';
         tooltip.style.top=Math.min(Math.max(toolY,8),window.innerHeight-60)+'px';
@@ -1176,17 +1244,15 @@
         function handleMouseLeave(){tooltip.style.display='none';}
         canvas.addEventListener('mousemove',handleMouseMove);
         canvas.addEventListener('mouseleave',handleMouseLeave);
-        // 移动端触摸事件保留（已存在）
         canvas.addEventListener('touchmove',function(e){e.preventDefault();const touch=e.touches[0];handleMouseMove({clientX:touch.clientX,clientY:touch.clientY});},{passive:false});
         canvas.addEventListener('touchend',handleMouseLeave);
 
-        // ---- 移动端手势（touch） ----
+        // ---- 移动端手势 ----
         wrapper.addEventListener('touchstart',function(e){
         if(e.touches.length===1){isTouching=true;touchStartPinch=false;lastTouchCenter={x:e.touches[0].clientX,y:e.touches[0].clientY};}
         else if(e.touches.length===2){touchStartPinch=true;isTouching=true;const dx=e.touches[0].clientX-e.touches[1].clientX;const dy=e.touches[0].clientY-e.touches[1].clientY;lastTouchDist=Math.sqrt(dx*dx+dy*dy);lastTouchCenter={x:(e.touches[0].clientX+e.touches[1].clientX)/2,y:(e.touches[0].clientY+e.touches[1].clientY)/2};}
         e.preventDefault();
         },{passive:false});
-
         wrapper.addEventListener('touchmove',function(e){
         e.preventDefault();
         if(!isTouching)return;
@@ -1199,17 +1265,16 @@
         const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;
         const dist=Math.sqrt(dx*dx+dy*dy);
         const scaleFactor=dist/lastTouchDist;
-        const newScale=Math.min(3,Math.max(0.5,transformScale*scaleFactor));
-        const centerX=(e.touches[0].clientX+e.touches[1].clientX)/2,centerY=(e.touches[0].clientY+e.touches[1].clientY)/2;
-        const ratio=newScale/transformScale;
-        transformOffsetX=centerX-(centerX-transformOffsetX)*ratio;
-        transformOffsetY=centerY-(centerY-transformOffsetY)*ratio;
-        transformScale=newScale;
-        lastTouchDist=dist;lastTouchCenter.x=centerX;lastTouchCenter.y=centerY;
-        applyTransform();
+        const factor=1/scaleFactor;
+        let newY=yMaxFixed*factor;
+        newY=Math.max(50,Math.min(2000,newY));
+        yMaxFixed=newY;
+        lastTouchDist=dist;
+        lastTouchCenter.x=(e.touches[0].clientX+e.touches[1].clientX)/2;
+        lastTouchCenter.y=(e.touches[0].clientY+e.touches[1].clientY)/2;
+        draw();
         }
         },{passive:false});
-
         wrapper.addEventListener('touchend',function(e){isTouching=false;touchStartPinch=false;});
 
         // ---- 消息监听 ----
